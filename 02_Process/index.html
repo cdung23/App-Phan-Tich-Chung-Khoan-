@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIX Trading Assistant - Trợ Lý Giao Dịch Cổ Phiếu VIX</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="style.css">
+    <!-- TradingView Lightweight Charts CDN -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <!-- html2canvas for Image Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-chart-line logo-icon"></i>
+                <div class="logo-text">
+                    <span class="brand" id="logo-brand">VIX</span>
+                    <span class="sub" id="logo-sub">Trade Assistant</span>
+                </div>
+            </div>
+
+            <div class="search-section">
+                <div class="section-title">Tìm Kiếm Cổ Phiếu</div>
+                <div class="search-bar-container">
+                    <input type="text" id="ticker-input" placeholder="Mã CK (ví dụ: FPT, HPG)" value="VIX" />
+                    <button id="btn-search-ticker"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" id="btn-dashboard">
+                    <i class="fa-solid fa-gauge"></i> Bảng điều khiển
+                </a>
+                <a href="#" class="nav-item" id="btn-signals">
+                    <i class="fa-solid fa-bolt"></i> Tín hiệu giao dịch
+                </a>
+                <a href="#" class="nav-item" id="btn-history">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử dữ liệu
+                </a>
+            </nav>
+            
+            <div class="file-uploader-section">
+                <div class="section-title">Nguồn Dữ Liệu</div>
+                <div class="source-status" id="source-status">
+                    <span class="status-dot warning"></span> Đang tải dữ liệu tự động...
+                </div>
+                <label for="csv-file" class="custom-file-upload">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Tải lên CSV khác
+                </label>
+                <input type="file" id="csv-file" accept=".csv" />
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="footer-info">
+                    <p>Phiên bản 1.0.0</p>
+                    <p class="copyright">© 2026 AI Agent</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="header-title">
+                    <h1 id="page-title">Trực quan hóa & Phân tích Kỹ thuật</h1>
+                    <p class="subtitle" id="data-range-label">Dữ liệu cổ phiếu Công ty Cổ phần Chứng khoán VIX</p>
+                </div>
+                <div class="header-actions">
+                    <button id="btn-export-tiktok" class="btn-export-tiktok">
+                        <i class="fa-brands fa-tiktok"></i> Xuất ảnh TikTok 1:1
+                    </button>
+                    <div class="price-badge" id="header-price-badge">
+                        <span class="ticker">VIX</span>
+                        <span class="price" id="header-last-price">0.00</span>
+                        <span class="change" id="header-price-change">0.00%</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid" id="dashboard-view">
+                
+                <!-- Summary Cards Row -->
+                <div class="kpi-container">
+                    <!-- KPI 1: Đóng cửa -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Giá Đóng Cửa</span>
+                            <div class="kpi-icon price-icon"><i class="fa-solid fa-coins"></i></div>
+                        </div>
+                        <div class="kpi-value" id="kpi-close">--</div>
+                        <div class="kpi-sub" id="kpi-change-sub">--</div>
+                    </div>
+                    <!-- KPI 2: Khối lượng -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">KL Khớp Lệnh (Trung bình)</span>
+                            <div class="kpi-icon vol-icon"><i class="fa-solid fa-cubes"></i></div>
+                        </div>
+                        <div class="kpi-value" id="kpi-volume">--</div>
+                        <div class="kpi-sub" id="kpi-volume-sub">Khớp lệnh trực tiếp</div>
+                    </div>
+                    <!-- KPI 3: Chỉ số RSI -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Chỉ số RSI (14)</span>
+                            <div class="kpi-icon rsi-icon"><i class="fa-solid fa-compass-drafting"></i></div>
+                        </div>
+                        <div class="kpi-value" id="kpi-rsi">--</div>
+                        <div class="kpi-sub" id="kpi-rsi-sub">Chưa có dữ liệu</div>
+                    </div>
+                    <!-- KPI 4: SMA 20 -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Xu hướng SMA(20)</span>
+                            <div class="kpi-icon sma-icon"><i class="fa-solid fa-wave-square"></i></div>
+                        </div>
+                        <div class="kpi-value" id="kpi-trend">--</div>
+                        <div class="kpi-sub" id="kpi-sma-sub">So với giá hiện tại</div>
+                    </div>
+                </div>
+
+                <!-- Main Chart & AI Section -->
+                <div class="layout-row">
+                    <!-- Chart Column -->
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fa-solid fa-chart-candlestick"></i> Biểu đồ nến & SMA(20)</h2>
+                            <div class="chart-controls">
+                                <button class="chart-btn active" data-days="all">Tất cả</button>
+                                <button class="chart-btn" data-days="90">90 Ngày</button>
+                                <button class="chart-btn" data-days="30">30 Ngày</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="chart-container" class="chart-container"></div>
+                        </div>
+                    </div>
+
+                    <!-- AI Signal Column -->
+                    <div class="card signal-card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fa-solid fa-bullhorn"></i> Khuyến nghị từ Hóng Kinh Tế</h2>
+                        </div>
+                        <div class="card-body signal-body">
+                            <div class="signal-badge-container">
+                                <div class="signal-value-badge neutral" id="main-signal-badge">Đang Phân Tích</div>
+                            </div>
+                            
+                            <div class="info-list">
+                                <div class="info-item">
+                                    <span class="info-label">Điểm số định lượng:</span>
+                                    <span class="info-value text-bold" id="signal-score">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Độ tin cậy:</span>
+                                    <span class="info-value text-bold" id="signal-confidence">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Vùng mua khuyến nghị:</span>
+                                    <span class="info-value" id="signal-buy-zone">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Mục tiêu ngắn hạn:</span>
+                                    <span class="info-value text-success" id="signal-target">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Cắt lỗ (Stop Loss):</span>
+                                    <span class="info-value text-danger" id="signal-stop-loss">--</span>
+                                </div>
+                            </div>
+
+                            <div class="score-checklist">
+                                <h3><i class="fa-solid fa-list-check"></i> Checklist Tín Hiệu Kỹ Thuật</h3>
+                                <ul id="checklist-items">
+                                    <li class="checklist-placeholder">Đang phân tích các chỉ báo...</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="analysis-explanation">
+                                <h3><i class="fa-solid fa-magnifying-glass-chart"></i> Lý do khuyến nghị:</h3>
+                                <p id="signal-explanation">Hệ thống đang tải dữ liệu để phân tích xu hướng và tính toán chỉ báo kỹ thuật của mã...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Money & Setup Analyzer Card -->
+                <div class="card setup-card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fa-solid fa-brain"></i> Phân Tích Quy Luật Dòng Tiền & Setup Giao Dịch Kinh Điển</h2>
+                    </div>
+                    <div class="card-body setup-body">
+                        <div class="setup-grid">
+                            <div class="setup-main-info">
+                                <div class="setup-badge-container">
+                                    <div class="setup-icon" id="setup-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                                    <div class="setup-name" id="setup-name">Đang quét quy luật...</div>
+                                </div>
+                                <div class="opportunity-meter-container">
+                                    <div class="opportunity-label">Độ Rõ Ràng của Cơ Hội Mua: <span id="opportunity-value">--</span></div>
+                                    <div class="opportunity-bar-bg">
+                                        <div class="opportunity-bar-fill" id="opportunity-bar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="setup-action-card">
+                                <div class="action-title"><i class="fa-solid fa-shield-halved"></i> Hành Động Chiến Thuật:</div>
+                                <div class="action-value" id="setup-action">Đang tính toán...</div>
+                            </div>
+                        </div>
+                        <div class="setup-explanation-box">
+                            <h3 class="explanation-title"><i class="fa-solid fa-graduation-cap"></i> Cơ chế vận hành dòng tiền:</h3>
+                            <p class="explanation-text" id="setup-explanation">Hệ thống đang quét các mẫu hình nến, biến động giá và chu kỳ khối lượng trong 20 phiên gần nhất để tìm kiếm các quy luật gom hàng hoặc bẫy giá của các tổ chức lớn...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Data Table -->
+                <div class="card full-width-card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fa-solid fa-list"></i> Dữ liệu giao dịch 10 ngày gần nhất</h2>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table" id="recent-table">
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Giá Mở Cửa</th>
+                                    <th>Cao Nhất</th>
+                                    <th>Thấp Nhất</th>
+                                    <th>Đóng Cửa</th>
+                                    <th>Thay Đổi (%)</th>
+                                    <th>Khối Lượng Khớp</th>
+                                    <th>Giá Trị Khớp (VNĐ)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="8" class="text-center">Đang tải dữ liệu...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Alternate View: Signals & Indicators Analysis -->
+            <div class="dashboard-grid hidden" id="signals-view">
+                <div class="card full-width-card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fa-solid fa-circle-nodes"></i> Đánh giá Hệ thống Chỉ báo</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="signals-matrix">
+                            <div class="matrix-item">
+                                <h3>Đường Trung Bình SMA(20)</h3>
+                                <div class="matrix-status" id="indicator-sma-status">--</div>
+                                <p id="indicator-sma-desc">Đang tính toán...</p>
+                            </div>
+                            <div class="matrix-item">
+                                <h3>Đường Trung Bình EMA(20/50)</h3>
+                                <div class="matrix-status" id="indicator-ema-status">--</div>
+                                <p id="indicator-ema-desc">Đang tính toán...</p>
+                            </div>
+                            <div class="matrix-item">
+                                <h3>Chỉ số Sức mạnh Tương đối RSI(14)</h3>
+                                <div class="matrix-status" id="indicator-rsi-status">--</div>
+                                <p id="indicator-rsi-desc">Đang tính toán...</p>
+                            </div>
+                            <div class="matrix-item">
+                                <h3>Chỉ báo MACD (12, 26, 9)</h3>
+                                <div class="matrix-status" id="indicator-macd-status">--</div>
+                                <p id="indicator-macd-desc">Đang tính toán...</p>
+                            </div>
+                            <div class="matrix-item">
+                                <h3>Biến động giá & Khối lượng</h3>
+                                <div class="matrix-status" id="indicator-vol-status">--</div>
+                                <p id="indicator-vol-desc">Đang tính toán...</p>
+                            </div>
+                            <div class="matrix-item">
+                                <h3>Vùng cản Hỗ trợ & Kháng cự</h3>
+                                <div class="matrix-status" id="indicator-sr-status">--</div>
+                                <p id="indicator-sr-desc">Đang tính toán...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alternate View: All Data History Table -->
+            <div class="dashboard-grid hidden" id="history-view">
+                <div class="card full-width-card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fa-solid fa-database"></i> Toàn bộ lịch sử giao dịch</h2>
+                        <div class="history-controls">
+                            <input type="text" id="search-date" placeholder="Tìm kiếm ngày (DD/MM/YYYY)...">
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive history-table-wrapper">
+                        <table class="data-table" id="all-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Giá Tham Chiếu</th>
+                                    <th>Mở Cửa</th>
+                                    <th>Đóng Cửa</th>
+                                    <th>Cao Nhất</th>
+                                    <th>Thấp Nhất</th>
+                                    <th>Thay Đổi</th>
+                                    <th>KL Khớp Lệnh</th>
+                                    <th>GT Khớp Lệnh</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="9" class="text-center">Đang tải dữ liệu...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal Xem trước & Xuất ảnh TikTok 1:1 (4K) -->
+    <div id="tiktok-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fa-brands fa-tiktok"></i> Xem trước Ảnh Infographic TikTok (Xuất 4K)</h2>
+                <button id="close-tiktok-modal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Wrapper chứa khung 1080x1080 thực tế được zoom nhỏ lại để xem trước -->
+                <div class="tiktok-preview-wrapper">
+                    <div id="tiktok-export-node">
+                        <!-- Header ảnh -->
+                        <div class="export-header">
+                            <div class="export-logo-section">
+                                <i class="fa-solid fa-chart-line logo-icon"></i>
+                                <div class="export-logo-text">
+                                    <span class="export-brand">HÓNG KINH TẾ</span>
+                                    <span class="export-sub">TRADE ASSISTANT</span>
+                                </div>
+                            </div>
+                            <div class="export-meta-section">
+                                <div id="export-ticker" class="export-ticker">VIX</div>
+                                <div id="export-date" class="export-date">28/05/2026</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Body ảnh -->
+                        <div class="export-body">
+                            <!-- Đồ thị phân tích -->
+                            <div class="export-chart-container">
+                                <img id="export-chart-img" alt="Biểu đồ phân tích kỹ thuật" src="" />
+                                <div class="export-chart-label">Biểu đồ nến & Dự báo thanh khoản T+5</div>
+                            </div>
+                            
+                            <!-- Bảng thông tin KPI -->
+                            <div class="export-summary-row">
+                                <div class="export-kpi-item">
+                                    <span class="kpi-label">Giá Đóng Cửa</span>
+                                    <span id="export-kpi-close" class="kpi-val">--</span>
+                                    <span id="export-kpi-change" class="kpi-change">--</span>
+                                </div>
+                                <div class="export-kpi-item">
+                                    <span class="kpi-label">Điểm Định Lượng</span>
+                                    <span id="export-kpi-score" class="kpi-val">--</span>
+                                </div>
+                                <div class="export-kpi-item">
+                                    <span class="kpi-label">Độ Tin Cậy</span>
+                                    <span id="export-kpi-confidence" class="kpi-val">--</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Bố cục 2 cột thông tin chi tiết -->
+                            <div class="export-details-grid">
+                                <!-- Khuyến nghị & Vùng giá -->
+                                <div class="export-panel export-signal-panel">
+                                    <div class="panel-title"><i class="fa-solid fa-compass"></i> TÍN HIỆU CHIẾN THUẬT</div>
+                                    <div class="signal-badge-wrapper">
+                                        <div id="export-signal-badge" class="export-signal-badge">ĐANG PHÂN TÍCH</div>
+                                    </div>
+                                    <div class="export-prices">
+                                        <div class="price-row">
+                                            <span>Vùng mua:</span>
+                                            <strong id="export-buy-zone">--</strong>
+                                        </div>
+                                        <div class="price-row">
+                                            <span>Mục tiêu:</span>
+                                            <strong id="export-target">--</strong>
+                                        </div>
+                                        <div class="price-row">
+                                            <span>Cắt lỗ:</span>
+                                            <strong id="export-stop-loss">--</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Quy luật dòng tiền -->
+                                <div class="export-panel export-setup-panel">
+                                    <div class="panel-title"><i class="fa-solid fa-brain"></i> QUY LUẬT DÒNG TIỀN (VSA)</div>
+                                    <div id="export-setup-name" class="export-setup-name">Đang quét quy luật...</div>
+                                    <div class="opp-meter-wrapper">
+                                        <div class="opp-label">Cơ hội mua: <span id="export-opp-value">--</span></div>
+                                        <div class="opp-bar-bg">
+                                            <div id="export-opp-bar" class="opp-bar-fill" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="export-action-box">
+                                        <span>Hành động:</span>
+                                        <strong id="export-action">ĐANG TÍNH TOÁN...</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Lý do phân tích -->
+                            <div class="export-explanation-panel">
+                                <div class="panel-title"><i class="fa-solid fa-magnifying-glass-chart"></i> LÝ DO KHUYẾN NGHỊ CHÍNH</div>
+                                <p id="export-explanation">Hệ thống đang quét xu hướng...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer ảnh -->
+                        <div class="export-footer">
+                            <span class="watermark">Phân tích tự động bởi AI Hóng Kinh Tế</span>
+                            <span class="disclaimer">Thông tin mang tính tham khảo, không phải lời khuyên tài chính.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-download-tiktok-4k" class="btn-download">
+                    <i class="fa-solid fa-download"></i> Tải ảnh 4K sắc nét (3840x3840)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script File -->
+    <script src="app.js"></script>
+</body>
+</html>
