@@ -2500,16 +2500,41 @@ document.addEventListener("DOMContentLoaded", () => {
             const dateKey = `${yyyy}${mm}${dd}`;
             
             const promises = screenerResults.map(item => {
-                const targetVal = item.target === '--' ? null : parseFloat(item.target.replace(/[^0-9.-]+/g,""));
-                const stopLossVal = item.stopLoss === '--' ? null : parseFloat(item.stopLoss.replace(/[^0-9.-]+/g,""));
+                let targetVal = null;
+                if (item.target && item.target !== '--') {
+                    const cleaned = item.target.replace(/[^0-9.-]+/g, "");
+                    if (cleaned !== "") {
+                        const parsed = parseFloat(cleaned);
+                        if (!isNaN(parsed)) {
+                            targetVal = parsed;
+                        }
+                    }
+                }
+                
+                let stopLossVal = null;
+                if (item.stopLoss && item.stopLoss !== '--') {
+                    const cleaned = item.stopLoss.replace(/[^0-9.-]+/g, "");
+                    if (cleaned !== "") {
+                        const parsed = parseFloat(cleaned);
+                        if (!isNaN(parsed)) {
+                            stopLossVal = parsed;
+                        }
+                    }
+                }
+                
+                let predictPriceVal = parseFloat(item.close);
+                if (isNaN(predictPriceVal)) predictPriceVal = 0;
+                
+                let predictScoreVal = parseFloat(item.score);
+                if (isNaN(predictScoreVal)) predictScoreVal = 0;
                 
                 const key = `${item.ticker}_${dateKey}`;
                 return firebaseDatabase.ref('predictions_evaluation/' + key).set({
                     ticker: item.ticker,
                     predictDate: todayDateStr,
-                    predictPrice: parseFloat(item.close),
-                    predictScore: parseFloat(item.score),
-                    predictAction: item.actionText,
+                    predictPrice: predictPriceVal,
+                    predictScore: predictScoreVal,
+                    predictAction: item.actionText || "TẠM THỜI QUAN SÁT",
                     targetPrice: targetVal,
                     stopLossPrice: stopLossVal,
                     actualPriceT5: null,
@@ -2590,10 +2615,16 @@ document.addEventListener("DOMContentLoaded", () => {
                             }
                         }
                         
+                        if (!item.predictPrice || isNaN(item.predictPrice) || item.predictPrice === 0) {
+                            console.warn(`[Firebase] Bỏ qua đối chiếu mã ${item.ticker} ngày ${item.predictDate} do giá dự báo không hợp lệ.`);
+                            continue;
+                        }
+                        
                         const priceDiffT5 = ((actualPriceT5 - item.predictPrice) / item.predictPrice) * 100;
                         let statusT5 = "LOSS";
                         
-                        if (item.predictAction.includes("MUA")) {
+                        const action = item.predictAction || "";
+                        if (action.includes("MUA")) {
                             if (stopLossHit) {
                                 statusT5 = "STOP_LOSS_HIT";
                             } else if (priceDiffT5 > 0) {
@@ -2601,7 +2632,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             } else {
                                 statusT5 = "LOSS";
                             }
-                        } else if (item.predictAction.includes("BÁN") || item.predictAction.includes("Bán")) {
+                        } else if (action.includes("BÁN") || action.includes("Bán")) {
                             if (priceDiffT5 < 0) {
                                 statusT5 = "PROFIT";
                             } else {
@@ -2611,9 +2642,17 @@ document.addEventListener("DOMContentLoaded", () => {
                             statusT5 = priceDiffT5 > 0 ? "PROFIT" : "LOSS";
                         }
                         
+                        const finalActualPrice = parseFloat(actualPriceT5.toFixed(0));
+                        const finalPriceDiff = parseFloat(priceDiffT5.toFixed(2));
+                        
+                        if (isNaN(finalActualPrice) || isNaN(finalPriceDiff)) {
+                            console.warn(`[Firebase] Bỏ qua đối chiếu mã ${item.ticker} ngày ${item.predictDate} do giá trị tính toán bị NaN.`);
+                            continue;
+                        }
+                        
                         await firebaseDatabase.ref('predictions_evaluation/' + key).update({
-                            actualPriceT5: parseFloat(actualPriceT5.toFixed(0)),
-                            priceDiffT5: parseFloat(priceDiffT5.toFixed(2)),
+                            actualPriceT5: finalActualPrice,
+                            priceDiffT5: finalPriceDiff,
                             statusT5: statusT5
                         });
                         console.log(`[Firebase] Đối chiếu thành công mã ${item.ticker} ngày ${item.predictDate}: ${statusT5} (${priceDiffT5.toFixed(2)}%)`);
