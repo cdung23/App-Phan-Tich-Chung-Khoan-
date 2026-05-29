@@ -2510,7 +2510,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const btnSyncFb = document.getElementById("btn-sync-firebase");
     if (btnSyncFb) {
-        btnSyncFb.addEventListener("click", () => {
+        btnSyncFb.addEventListener("click", async () => {
             if (!firebaseDatabase) {
                 alert("Vui lòng cấu hình kết nối Firebase trước ở chân trang Sidebar.");
                 return;
@@ -2530,6 +2530,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 const dd = String(today.getDate()).padStart(2, '0');
                 const todayDateStr = `${yyyy}-${mm}-${dd}`;
                 const dateKey = `${yyyy}${mm}${dd}`;
+
+                // Kiểm tra xem dữ liệu ngày hôm nay đã tồn tại trên Firebase chưa
+                const snapshot = await firebaseDatabase.ref('predictions_evaluation')
+                    .orderByChild('predictDate')
+                    .equalTo(todayDateStr)
+                    .once('value');
+                
+                if (snapshot.exists()) {
+                    const confirmSync = confirm(`Dữ liệu dự báo của ngày hôm nay (${dd}/${mm}/${yyyy}) đã được đồng bộ lên Firebase trước đó.\nBạn có muốn ghi đè để cập nhật dữ liệu mới nhất không?`);
+                    if (!confirmSync) {
+                        btnSyncFb.disabled = false;
+                        btnSyncFb.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Đồng bộ lên Firebase';
+                        return;
+                    }
+                }
                 
                 const promises = screenerResults.map(item => {
                     let targetVal = null;
