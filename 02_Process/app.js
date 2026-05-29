@@ -1810,29 +1810,50 @@ document.addEventListener("DOMContentLoaded", () => {
         const chartContainer = document.getElementById("chart-container");
         const exportChartImg = document.getElementById("export-chart-img");
         
-        if (chartContainer && exportChartImg) {
+        if (chartContainer && exportChartImg && chartInstance) {
             // Hiển thị trạng thái ảnh đang tải
             exportChartImg.src = "";
             exportChartImg.alt = "Đang kết xuất biểu đồ...";
 
-            // Chụp biểu đồ bằng html2canvas
-            html2canvas(chartContainer, {
-                useCORS: true,
-                backgroundColor: '#181d2c',
-                logging: false
-            }).then(canvas => {
-                exportChartImg.src = canvas.toDataURL("image/png");
-                exportChartImg.alt = "Biểu đồ phân tích kỹ thuật";
-                
-                // Mở modal sau khi biểu đồ được chụp xong
-                if (tiktokModal) {
-                    tiktokModal.classList.remove("hidden");
-                    document.body.style.overflow = "hidden"; // Khóa cuộn trang chính khi mở modal xem trước
-                }
-            }).catch(err => {
-                console.error("Lỗi chụp biểu đồ:", err);
-                alert("Không thể chụp ảnh biểu đồ. Vui lòng thử lại!");
-            });
+            // Tạm thời thay đổi kích thước container để Lightweight Charts vẽ lại biểu đồ đúng chuẩn 980x320px
+            const originalWidth = chartContainer.style.width;
+            const originalHeight = chartContainer.style.height;
+            
+            chartContainer.style.width = "980px";
+            chartContainer.style.height = "320px";
+            chartInstance.resize(980, 320);
+
+            // Đợi 150ms để Lightweight Charts cập nhật layout vẽ biểu đồ
+            setTimeout(() => {
+                html2canvas(chartContainer, {
+                    useCORS: true,
+                    backgroundColor: '#181d2c',
+                    logging: false
+                }).then(canvas => {
+                    exportChartImg.src = canvas.toDataURL("image/png");
+                    exportChartImg.alt = "Biểu đồ phân tích kỹ thuật";
+                    
+                    // Khôi phục kích thước biểu đồ ban đầu
+                    chartContainer.style.width = originalWidth;
+                    chartContainer.style.height = originalHeight;
+                    resizeChart();
+
+                    // Mở modal sau khi biểu đồ được chụp xong
+                    if (tiktokModal) {
+                        tiktokModal.classList.remove("hidden");
+                        document.body.style.overflow = "hidden"; // Khóa cuộn trang chính khi mở modal xem trước
+                    }
+                }).catch(err => {
+                    console.error("Lỗi chụp biểu đồ:", err);
+                    
+                    // Khôi phục kích thước biểu đồ ban đầu
+                    chartContainer.style.width = originalWidth;
+                    chartContainer.style.height = originalHeight;
+                    resizeChart();
+
+                    alert("Không thể chụp ảnh biểu đồ. Vui lòng thử lại!");
+                });
+            }, 150);
         }
     }
 
@@ -1873,6 +1894,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 logging: false,
                 backgroundColor: null // Giữ nền trong suốt cho các phần ngoài bo góc
             }).then(canvas => {
+                // Tạo link tải ảnh
+                const link = document.createElement("a");
+                const ticker = currentTicker || "VIX";
+                
+                // Ngày định dạng DD-MM-YYYY
+                const latest = rawData[0];
+                const dateStr = latest ? latest.dateStr.replace(/\//g, "-") : new Date().toLocaleDateString('vi-VN').replace(/\//g, "-");
+                
+                link.download = `[HongKinhTe]_${ticker}_${dateStr}_1x1_4K.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+
+                // Khôi phục trạng thái nút bấm
+                btnDownloadTiktok4k.disabled = false;
+                btnDownloadTiktok4k.innerHTML = originalBtnText;
+
+                // Khôi phục trạng thái node DOM cũ
+                node.style.transform = originalTransform;
+                node.style.position = originalPosition;
+                node.style.top = originalTop;
+                node.style.left = originalLeft;
+                node.style.zIndex = originalZIndex;
             }).catch(err => {
                 console.error("Lỗi xuất ảnh 4K:", err);
                 alert("Lỗi xuất ảnh 4K: " + err.message);
