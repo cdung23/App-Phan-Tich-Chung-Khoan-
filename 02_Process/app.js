@@ -1822,6 +1822,7 @@ document.addEventListener("DOMContentLoaded", () => {
             chartContainer.style.width = "980px";
             chartContainer.style.height = "320px";
             chartInstance.resize(980, 320);
+            chartInstance.timeScale().fitContent(); // Tự động kéo giãn các nến vừa khít chiều rộng mới 980px
 
             // Đợi 150ms để Lightweight Charts cập nhật layout vẽ biểu đồ
             setTimeout(() => {
@@ -1837,6 +1838,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     chartContainer.style.width = originalWidth;
                     chartContainer.style.height = originalHeight;
                     resizeChart();
+                    chartInstance.timeScale().fitContent(); // Căn chỉnh lại biểu đồ chính vừa vặn màn hình
 
                     // Mở modal sau khi biểu đồ được chụp xong
                     if (tiktokModal) {
@@ -1850,6 +1852,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     chartContainer.style.width = originalWidth;
                     chartContainer.style.height = originalHeight;
                     resizeChart();
+                    chartInstance.timeScale().fitContent();
 
                     alert("Không thể chụp ảnh biểu đồ. Vui lòng thử lại!");
                 });
