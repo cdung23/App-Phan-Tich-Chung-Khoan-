@@ -69,12 +69,13 @@ body {
     margin-bottom: 40px;
 }
 
-.logo-icon {
-    font-size: 24px;
-    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 8px var(--glow-blue));
+.logo-img-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .logo-text {
@@ -1197,9 +1198,13 @@ body {
     gap: 15px;
 }
 
-.export-logo-section .logo-icon {
-    font-size: 36px;
-    color: #ff0050; /* Màu hồng neon solid để tránh lỗi kết xuất của html2canvas */
+.export-logo-img {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .export-logo-text {

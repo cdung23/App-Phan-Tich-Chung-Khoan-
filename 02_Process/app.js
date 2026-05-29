@@ -1185,7 +1185,7 @@ document.addEventListener("DOMContentLoaded", () => {
             oppValText = "70% (Khá Cao)";
             oppPercent = 70;
             oppClass = "high";
-            actionText = "MUA TÍCH LŨY CÙNG CÁ MẠP";
+            actionText = "MUA TÍCH LŨY CÙNG CÁ MẬP";
             explanationText = `Thuật toán phát hiện dòng tiền thông minh của tổ chức âm thầm thu gom hàng trong 20 phiên qua. Biểu hiện qua số phiên tăng vol lớn chủ đạo chiếm ưu thế so với các phiên giảm vol lớn, đồng thời giá không bị kéo tăng quá mạnh nhằm tránh sự chú ý. Đây là cơ hội mua tích lũy an toàn cùng giá vốn của cá mập.`;
             checklist.push({
                 type: "bullish",
