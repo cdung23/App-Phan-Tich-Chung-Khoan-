@@ -2326,6 +2326,11 @@ document.addEventListener("DOMContentLoaded", () => {
         btnStart.disabled = false;
         btnStart.innerHTML = `<i class="fa-solid fa-play"></i> Bắt đầu rà soát thị trường`;
         progressStatus.textContent = `Đã hoàn thành rà soát toàn bộ ${totalTickers} mã cổ phiếu thị trường!`;
+        
+        const btnSync = document.getElementById("btn-sync-firebase");
+        if (btnSync) {
+            btnSync.classList.remove("hidden");
+        }
     }
 
     const btnStartScreener = document.getElementById("btn-start-screener");
@@ -2365,4 +2370,345 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     });
+
+    // ----------------------------------------------------
+    // TÍCH HỢP FIREBASE REALTIME DATABASE & ĐỐI CHIẾU DỰ BÁO T+5
+    // ----------------------------------------------------
+    let firebaseApp = null;
+    let firebaseDatabase = null;
+
+    function initFirebase() {
+        const configStr = localStorage.getItem("firebase_screener_config");
+        const fbStatus = document.getElementById("firebase-status");
+        if (!configStr) {
+            if (fbStatus) {
+                fbStatus.innerHTML = '<span class="status-dot error" style="background-color: #ef4444; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span> Firebase: Chưa cấu hình';
+                fbStatus.className = "firebase-status disconnect";
+            }
+            return;
+        }
+
+        try {
+            const config = JSON.parse(configStr);
+            if (!config.apiKey || !config.databaseURL) {
+                throw new Error("Thiếu API Key hoặc Database URL");
+            }
+            
+            if (firebase.apps.length === 0) {
+                firebaseApp = firebase.initializeApp(config);
+            } else {
+                firebaseApp = firebase.app();
+            }
+            firebaseDatabase = firebaseApp.database();
+            
+            if (fbStatus) {
+                fbStatus.innerHTML = '<span class="status-dot success" style="background-color: #10b981; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span> Firebase: Đã kết nối';
+                fbStatus.className = "firebase-status connect";
+            }
+            
+            autoEvaluatePastPredictions();
+            loadFirebasePerformanceData();
+        } catch (err) {
+            console.error("Lỗi khởi tạo Firebase:", err);
+            if (fbStatus) {
+                fbStatus.innerHTML = '<span class="status-dot error" style="background-color: #ef4444; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span> Firebase: Lỗi kết nối';
+                fbStatus.className = "firebase-status error";
+            }
+        }
+    }
+
+    const btnConfigFb = document.getElementById("btn-config-firebase");
+    const fbModal = document.getElementById("firebase-config-modal");
+    const closeFbModal = document.getElementById("close-firebase-modal");
+    const btnSaveFbConfig = document.getElementById("btn-save-firebase-config");
+
+    if (btnConfigFb && fbModal) {
+        btnConfigFb.addEventListener("click", (e) => {
+            e.preventDefault();
+            fbModal.classList.remove("hidden");
+            document.body.style.overflow = "hidden";
+            
+            const configStr = localStorage.getItem("firebase_screener_config");
+            if (configStr) {
+                try {
+                    const config = JSON.parse(configStr);
+                    document.getElementById("fb-apiKey").value = config.apiKey || "";
+                    document.getElementById("fb-authDomain").value = config.authDomain || "";
+                    document.getElementById("fb-databaseURL").value = config.databaseURL || "";
+                    document.getElementById("fb-projectId").value = config.projectId || "";
+                    document.getElementById("fb-appId").value = config.appId || "";
+                } catch(e){}
+            }
+        });
+    }
+
+    if (closeFbModal && fbModal) {
+        closeFbModal.addEventListener("click", () => {
+            fbModal.classList.add("hidden");
+            document.body.style.overflow = "";
+        });
+    }
+    
+    window.addEventListener("click", (e) => {
+        if (e.target === fbModal) {
+            fbModal.classList.add("hidden");
+            document.body.style.overflow = "";
+        }
+    });
+
+    if (btnSaveFbConfig) {
+        btnSaveFbConfig.addEventListener("click", () => {
+            const apiKey = document.getElementById("fb-apiKey").value.trim();
+            const authDomain = document.getElementById("fb-authDomain").value.trim();
+            const databaseURL = document.getElementById("fb-databaseURL").value.trim();
+            const projectId = document.getElementById("fb-projectId").value.trim();
+            const appId = document.getElementById("fb-appId").value.trim();
+            
+            if (!apiKey || !databaseURL) {
+                alert("Vui lòng điền tối thiểu API Key và Database URL.");
+                return;
+            }
+            
+            const config = { apiKey, authDomain, databaseURL, projectId, appId };
+            localStorage.setItem("firebase_screener_config", JSON.stringify(config));
+            
+            alert("Lưu cấu hình thành công! Ứng dụng sẽ tải lại để kết nối.");
+            location.reload();
+        });
+    }
+
+    const btnSyncFb = document.getElementById("btn-sync-firebase");
+    if (btnSyncFb) {
+        btnSyncFb.addEventListener("click", () => {
+            if (!firebaseDatabase) {
+                alert("Vui lòng cấu hình kết nối Firebase trước ở chân trang Sidebar.");
+                return;
+            }
+            if (screenerResults.length === 0) {
+                alert("Không có kết quả rà soát nào để đồng bộ.");
+                return;
+            }
+            
+            btnSyncFb.disabled = true;
+            btnSyncFb.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đồng bộ...';
+            
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayDateStr = `${yyyy}-${mm}-${dd}`;
+            const dateKey = `${yyyy}${mm}${dd}`;
+            
+            const promises = screenerResults.map(item => {
+                const targetVal = item.target === '--' ? null : parseFloat(item.target.replace(/[^0-9.-]+/g,""));
+                const stopLossVal = item.stopLoss === '--' ? null : parseFloat(item.stopLoss.replace(/[^0-9.-]+/g,""));
+                
+                const key = `${item.ticker}_${dateKey}`;
+                return firebaseDatabase.ref('predictions_evaluation/' + key).set({
+                    ticker: item.ticker,
+                    predictDate: todayDateStr,
+                    predictPrice: parseFloat(item.close),
+                    predictScore: parseFloat(item.score),
+                    predictAction: item.actionText,
+                    targetPrice: targetVal,
+                    stopLossPrice: stopLossVal,
+                    actualPriceT5: null,
+                    priceDiffT5: null,
+                    statusT5: "WAITING"
+                });
+            });
+            
+            Promise.all(promises).then(() => {
+                alert("Đồng bộ dữ liệu dự báo lên Firebase thành công!");
+                btnSyncFb.disabled = false;
+                btnSyncFb.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Đồng bộ lên Firebase';
+                btnSyncFb.classList.add("hidden");
+                loadFirebasePerformanceData();
+            }).catch(err => {
+                console.error("Lỗi đồng bộ Firebase:", err);
+                alert("Đồng bộ thất bại: " + err.message);
+                btnSyncFb.disabled = false;
+                btnSyncFb.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Đồng bộ lên Firebase';
+            });
+        });
+    }
+
+    async function autoEvaluatePastPredictions() {
+        if (!firebaseDatabase) return;
+        
+        try {
+            const snapshot = await firebaseDatabase.ref('predictions_evaluation').orderByChild('statusT5').equalTo('WAITING').once('value');
+            const data = snapshot.val();
+            if (!data) return;
+            
+            const now = new Date();
+            const keysToEvaluate = [];
+            
+            Object.keys(data).forEach(key => {
+                const item = data[key];
+                const predictDate = new Date(item.predictDate);
+                const diffDays = Math.floor((now - predictDate) / (1000 * 60 * 60 * 24));
+                if (diffDays >= 7) {
+                    keysToEvaluate.push({ key, item });
+                }
+            });
+            
+            if (keysToEvaluate.length === 0) return;
+            
+            console.log(`[Firebase] Tìm thấy ${keysToEvaluate.length} dự báo chờ đối chiếu T+5...`);
+            
+            for (const { key, item } of keysToEvaluate) {
+                try {
+                    const fromTimestamp = Math.floor(new Date(item.predictDate).getTime() / 1000) - (5 * 24 * 60 * 60);
+                    const toTimestamp = Math.floor(now.getTime() / 1000) + (2 * 24 * 60 * 60);
+                    
+                    const url = `https://dchart-api.vndirect.com.vn/dchart/history?symbol=${item.ticker}&resolution=D&from=${fromTimestamp}&to=${toTimestamp}`;
+                    const res = await fetch(url);
+                    if (!res.ok) continue;
+                    const json = await res.json();
+                    const dataRows = parseVndirectData(item.ticker, json);
+                    if (!dataRows || dataRows.length === 0) continue;
+                    
+                    const [yyyy, mm, dd] = item.predictDate.split('-');
+                    const predictDateStr = `${dd}/${mm}/${yyyy}`;
+                    
+                    const idx = dataRows.findIndex(d => d.dateStr === predictDateStr);
+                    if (idx === -1) continue;
+                    
+                    if (dataRows.length > idx + 5) {
+                        const actualRow = dataRows[idx + 5];
+                        const actualPriceT5 = actualRow.close;
+                        
+                        let stopLossHit = false;
+                        if (item.stopLossPrice) {
+                            for (let k = 1; k <= 5; k++) {
+                                const row = dataRows[idx + k];
+                                if (row && row.close <= item.stopLossPrice) {
+                                    stopLossHit = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        const priceDiffT5 = ((actualPriceT5 - item.predictPrice) / item.predictPrice) * 100;
+                        let statusT5 = "LOSS";
+                        
+                        if (item.predictAction.includes("MUA")) {
+                            if (stopLossHit) {
+                                statusT5 = "STOP_LOSS_HIT";
+                            } else if (priceDiffT5 > 0) {
+                                statusT5 = "PROFIT";
+                            } else {
+                                statusT5 = "LOSS";
+                            }
+                        } else if (item.predictAction.includes("BÁN") || item.predictAction.includes("Bán")) {
+                            if (priceDiffT5 < 0) {
+                                statusT5 = "PROFIT";
+                            } else {
+                                statusT5 = "LOSS";
+                            }
+                        } else {
+                            statusT5 = priceDiffT5 > 0 ? "PROFIT" : "LOSS";
+                        }
+                        
+                        await firebaseDatabase.ref('predictions_evaluation/' + key).update({
+                            actualPriceT5: parseFloat(actualPriceT5.toFixed(0)),
+                            priceDiffT5: parseFloat(priceDiffT5.toFixed(2)),
+                            statusT5: statusT5
+                        });
+                        console.log(`[Firebase] Đối chiếu thành công mã ${item.ticker} ngày ${item.predictDate}: ${statusT5} (${priceDiffT5.toFixed(2)}%)`);
+                    }
+                } catch (e) {
+                    console.warn(`Lỗi đối chiếu mã ${item.ticker}:`, e.message);
+                }
+                await new Promise(r => setTimeout(r, 200));
+            }
+            
+            loadFirebasePerformanceData();
+        } catch (err) {
+            console.error("Lỗi chạy đối chiếu tự động:", err);
+        }
+    }
+
+    async function loadFirebasePerformanceData() {
+        if (!firebaseDatabase) return;
+        
+        try {
+            const snapshot = await firebaseDatabase.ref('predictions_evaluation').once('value');
+            const data = snapshot.val();
+            
+            const perfWinRate = document.getElementById("perf-win-rate");
+            const perfTotalCount = document.getElementById("perf-total-count");
+            const perfProfitCount = document.getElementById("perf-profit-count");
+            const perfLossCount = document.getElementById("perf-loss-count");
+            const perfRecentBody = document.getElementById("perf-recent-body");
+            
+            if (!data) {
+                if (perfWinRate) perfWinRate.textContent = "0%";
+                if (perfTotalCount) perfTotalCount.textContent = "0";
+                if (perfProfitCount) perfProfitCount.textContent = "0";
+                if (perfLossCount) perfLossCount.textContent = "0";
+                if (perfRecentBody) {
+                    perfRecentBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted" style="padding: 20px; text-align: center; color: var(--text-muted);">Chưa có dữ liệu dự báo. Tiến hành rà soát và đồng bộ lên Firebase!</td></tr>`;
+                }
+                return;
+            }
+            
+            let total = 0;
+            let profit = 0;
+            let loss = 0;
+            const completedDeals = [];
+            
+            Object.keys(data).forEach(key => {
+                const item = data[key];
+                if (item.statusT5 !== "WAITING") {
+                    total++;
+                    if (item.statusT5 === "PROFIT") {
+                        profit++;
+                    } else {
+                        loss++;
+                    }
+                    completedDeals.push(item);
+                }
+            });
+            
+            const winRate = total > 0 ? Math.round((profit / total) * 100) : 0;
+            
+            if (perfWinRate) perfWinRate.textContent = `${winRate}%`;
+            if (perfTotalCount) perfTotalCount.textContent = total;
+            if (perfProfitCount) perfProfitCount.textContent = profit;
+            if (perfLossCount) perfLossCount.textContent = loss;
+            
+            if (perfRecentBody) {
+                if (completedDeals.length === 0) {
+                    perfRecentBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted" style="padding: 20px; text-align: center; color: var(--text-muted);">Chưa có deal nào đủ T+5 để đối chiếu. Vui lòng quay lại sau vài ngày!</td></tr>`;
+                } else {
+                    completedDeals.sort((a, b) => new Date(b.predictDate) - new Date(a.predictDate));
+                    const recentDeals = completedDeals.slice(0, 5);
+                    
+                    let htmlStr = "";
+                    recentDeals.forEach(deal => {
+                        const isProfit = deal.statusT5 === "PROFIT";
+                        const statusBadge = isProfit ? '<span style="color: #10b981; font-weight: 600;">PROFIT</span>' : (deal.statusT5 === "STOP_LOSS_HIT" ? '<span style="color: #ef4444; font-weight: 600;">SL HIT</span>' : '<span style="color: #ef4444; font-weight: 600;">LOSS</span>');
+                        const diffSign = deal.priceDiffT5 > 0 ? '+' : '';
+                        const diffColor = deal.priceDiffT5 > 0 ? '#10b981' : '#ef4444';
+                        
+                        htmlStr += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                            <td style="padding: 8px 12px; font-weight: bold; color: var(--text-primary);">${deal.ticker}</td>
+                            <td style="padding: 8px 12px; color: var(--text-secondary);">${deal.predictDate}</td>
+                            <td style="padding: 8px 12px; color: var(--text-secondary);">${formatMoney(deal.predictPrice)} đ</td>
+                            <td style="padding: 8px 12px; color: var(--text-secondary);">${formatMoney(deal.actualPriceT5)} đ</td>
+                            <td style="padding: 8px 12px; text-align: right; font-weight: 600; color: ${diffColor};">${diffSign}${deal.priceDiffT5}% (${statusBadge})</td>
+                        </tr>`;
+                    });
+                    perfRecentBody.innerHTML = htmlStr;
+                }
+            }
+        } catch (err) {
+            console.error("Lỗi load performance data:", err);
+        }
+    }
+
+    // Khởi tạo Firebase
+    initFirebase();
 });

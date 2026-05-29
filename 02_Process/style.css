@@ -1775,5 +1775,36 @@ body {
     box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
 }
 
+/* Firebase & Performance UI Enhancements */
+.firebase-status-section .config-link {
+    transition: color 0.2s ease;
+}
+.firebase-status-section .config-link:hover {
+    color: #60a5fa !important;
+    text-decoration: underline !important;
+}
+.btn-sync-firebase {
+    transition: all 0.2s ease-in-out;
+}
+.btn-sync-firebase:hover {
+    background-color: #2563eb !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    transform: translateY(-1px);
+}
+.win-rate-circle {
+    transition: all 0.3s ease;
+}
+.win-rate-circle:hover {
+    border-color: #3b82f6 !important;
+    background: rgba(59, 130, 246, 0.1) !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+}
+.mini-table th, .mini-table td {
+    padding: 6px 12px !important;
+}
+.mini-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
 
 

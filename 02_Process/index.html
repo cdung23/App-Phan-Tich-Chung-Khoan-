@@ -16,6 +16,10 @@
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <!-- html2canvas for Image Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Firebase SDK (Compat Version) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -64,6 +68,14 @@
             </div>
 
             <div class="sidebar-footer">
+                <div class="firebase-status-section" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: left;">
+                    <div id="firebase-status" class="firebase-status disconnect" style="font-size: 12px; display: flex; align-items: center; gap: 6px; color: var(--text-secondary);">
+                        <span class="status-dot error" style="background-color: #ef4444; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span> Firebase: Chưa cấu hình
+                    </div>
+                    <a href="#" id="btn-config-firebase" class="config-link" style="font-size: 11px; color: #3b82f6; text-decoration: none; display: inline-block; margin-top: 6px;">
+                        <i class="fa-solid fa-gear"></i> Cấu hình Firebase
+                    </a>
+                </div>
                 <div class="footer-info">
                     <p>Phiên bản 1.0.0</p>
                     <p class="copyright">© 2026 AI Agent</p>
@@ -345,13 +357,18 @@
                         <h2 class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Rà soát toàn bộ thị trường chứng khoán Việt Nam</h2>
                     </div>
                     <div class="card-body">
-                        <div class="screener-setup-row">
-                            <div class="screener-intro">
+                        <div class="screener-setup-row" style="display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap;">
+                            <div class="screener-intro" style="flex: 1; min-width: 250px;">
                                 <p>Hệ thống tự động rà soát danh sách <strong>120 mã cổ phiếu lớn nhất Việt Nam</strong>. Quá trình này sẽ gọi API VNDirect, tính toán động lượng kỹ thuật và quét các quy luật dòng tiền thông minh (VSA/Wyckoff) để xếp hạng cơ hội đầu tư tốt nhất.</p>
                             </div>
-                            <button id="btn-start-screener" class="btn-start-screener">
-                                <i class="fa-solid fa-play"></i> Bắt đầu rà soát thị trường
-                            </button>
+                            <div class="screener-actions" style="display: flex; gap: 10px;">
+                                <button id="btn-start-screener" class="btn-start-screener">
+                                    <i class="fa-solid fa-play"></i> Bắt đầu rà soát thị trường
+                                </button>
+                                <button id="btn-sync-firebase" class="btn-sync-firebase hidden" style="background-color: #3b82f6; padding: 12px 20px; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: inherit; font-size: 14px; transition: all 0.2s;">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Đồng bộ lên Firebase
+                                </button>
+                            </div>
                         </div>
                         
                         <!-- Progress Container -->
@@ -362,6 +379,58 @@
                             </div>
                             <div class="progress-bar-bg">
                                 <div id="screener-progress-bar" class="progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Predictions Performance Card (Firebase) -->
+                <div class="card full-width-card performance-card" id="firebase-performance-card" style="margin-top: 16px;">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Hiệu suất Dự báo T+5 của mô hình (Dữ liệu đối chiếu từ Firebase)</h2>
+                    </div>
+                    <div class="card-body" style="padding: 20px;">
+                        <div class="performance-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: center;">
+                            <div class="win-rate-container" style="display: flex; justify-content: center; align-items: center;">
+                                <div class="win-rate-circle" style="width: 120px; height: 120px; border-radius: 50%; border: 6px solid rgba(59, 130, 246, 0.2); display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(59, 130, 246, 0.05); position: relative;">
+                                    <span id="perf-win-rate" style="font-size: 26px; font-weight: 800; color: #3b82f6;">--%</span>
+                                    <small style="font-size: 10px; text-transform: uppercase; color: var(--text-secondary); margin-top: 4px; letter-spacing: 0.5px;">Win Rate</small>
+                                </div>
+                            </div>
+                            <div class="perf-stats" style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                                <div class="perf-stat-item" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px;">
+                                    <span class="label" style="color: var(--text-secondary);">Tổng số dự báo đã đối chiếu:</span>
+                                    <span id="perf-total-count" class="val" style="font-weight: 600; color: var(--text-primary);">--</span>
+                                </div>
+                                <div class="perf-stat-item text-success" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; color: #10b981;">
+                                    <span class="label">Số cơ hội Mua thành công (PROFIT):</span>
+                                    <span id="perf-profit-count" class="val" style="font-weight: 600;">--</span>
+                                </div>
+                                <div class="perf-stat-item text-danger" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; color: #ef4444;">
+                                    <span class="label">Số cơ hội Thua lỗ / Bị cắt lỗ (LOSS/SL):</span>
+                                    <span id="perf-loss-count" class="val" style="font-weight: 600;">--</span>
+                                </div>
+                            </div>
+                            <div class="perf-recent-deals" style="grid-column: span 2; display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                                <div class="section-title" style="font-size: 13px; font-weight: 600; color: var(--text-primary);"><i class="fa-solid fa-clock-rotate-left"></i> Các dự báo đối chiếu gần đây</div>
+                                <div class="table-responsive" style="max-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.15); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                                    <table class="data-table mini-table" id="perf-recent-table" style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background: rgba(255,255,255,0.02); text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                                <th style="padding: 6px 12px;">Mã CK</th>
+                                                <th style="padding: 6px 12px;">Ngày Quét</th>
+                                                <th style="padding: 6px 12px;">Giá Mua</th>
+                                                <th style="padding: 6px 12px;">Giá T+5</th>
+                                                <th style="padding: 6px 12px; text-align: right;">Biến Động</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="perf-recent-body">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted" style="padding: 20px; text-align: center; color: var(--text-muted);">Đang tải dữ liệu từ Firebase...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -539,6 +608,47 @@
             <div class="modal-footer">
                 <button id="btn-download-tiktok-4k" class="btn-download">
                     <i class="fa-solid fa-download"></i> Tải ảnh 4K sắc nét (3840x3840)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cấu hình Firebase -->
+    <div id="firebase-config-modal" class="modal-overlay hidden">
+        <div class="modal-container" style="max-width: 500px; background: #1b2234; border: 1px solid rgba(255,255,255,0.08);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding: 15px 20px;">
+                <h2 class="modal-title" style="font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-gear" style="color: #3b82f6;"></i> Cấu hình Kết nối Firebase</h2>
+                <button id="close-firebase-modal" class="close-btn" style="background: none; border: none; color: var(--text-secondary); font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px; color: var(--text-primary); font-family: inherit;">
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; line-height: 1.5;">
+                    Vui lòng dán chuỗi cấu hình Firebase Web App của bạn từ Firebase Console (chọn cơ sở dữ liệu **Realtime Database**) để kích hoạt tính năng đồng bộ và đối chiếu hiệu suất dự báo T+5.
+                </p>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-secondary);">API Key</label>
+                    <input type="text" id="fb-apiKey" class="form-control" style="width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: white; box-sizing: border-box; font-family: inherit; font-size: 13px;" />
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-secondary);">Auth Domain</label>
+                    <input type="text" id="fb-authDomain" class="form-control" style="width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: white; box-sizing: border-box; font-family: inherit; font-size: 13px;" />
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-secondary);">Database URL (Realtime DB URL)</label>
+                    <input type="text" id="fb-databaseURL" class="form-control" placeholder="https://tên-dự-án-mặc-định.firebaseio.com" style="width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: white; box-sizing: border-box; font-family: inherit; font-size: 13px;" />
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-secondary);">Project ID</label>
+                    <input type="text" id="fb-projectId" class="form-control" style="width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: white; box-sizing: border-box; font-family: inherit; font-size: 13px;" />
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-secondary);">App ID</label>
+                    <input type="text" id="fb-appId" class="form-control" style="width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: white; box-sizing: border-box; font-family: inherit; font-size: 13px;" />
+                </div>
+                <div id="firebase-test-result" style="font-size: 12px; margin-top: 10px; padding: 8px 12px; border-radius: 4px; display: none;"></div>
+            </div>
+            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: flex-end; gap: 10px; background: rgba(0,0,0,0.1);">
+                <button id="btn-save-firebase-config" class="btn-download" style="background: #3b82f6; padding: 10px 20px; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; font-size: 13px; font-family: inherit;">
+                    <i class="fa-solid fa-floppy-disk"></i> Lưu Cấu Hình
                 </button>
             </div>
         </div>
