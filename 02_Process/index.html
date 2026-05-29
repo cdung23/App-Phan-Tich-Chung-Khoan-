@@ -44,6 +44,9 @@
                 <a href="#" class="nav-item" id="btn-signals">
                     <i class="fa-solid fa-bolt"></i> Tín hiệu giao dịch
                 </a>
+                <a href="#" class="nav-item" id="btn-screener">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Bộ lọc rà soát
+                </a>
                 <a href="#" class="nav-item" id="btn-history">
                     <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử dữ liệu
                 </a>
@@ -327,6 +330,94 @@
                             <tbody>
                                 <tr>
                                     <td colspan="9" class="text-center">Đang tải dữ liệu...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alternate View: Market Screener -->
+            <div class="dashboard-grid hidden" id="screener-view">
+                <!-- Control Panel Card -->
+                <div class="card full-width-card screener-control-card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Rà soát toàn bộ thị trường chứng khoán Việt Nam</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="screener-setup-row">
+                            <div class="screener-intro">
+                                <p>Hệ thống tự động rà soát danh sách <strong>120 mã cổ phiếu lớn nhất Việt Nam</strong>. Quá trình này sẽ gọi API VNDirect, tính toán động lượng kỹ thuật và quét các quy luật dòng tiền thông minh (VSA/Wyckoff) để xếp hạng cơ hội đầu tư tốt nhất.</p>
+                            </div>
+                            <button id="btn-start-screener" class="btn-start-screener">
+                                <i class="fa-solid fa-play"></i> Bắt đầu rà soát thị trường
+                            </button>
+                        </div>
+                        
+                        <!-- Progress Container -->
+                        <div id="screener-progress-container" class="screener-progress-container hidden">
+                            <div class="progress-info-row">
+                                <span id="screener-progress-status">Đang chuẩn bị quét dữ liệu...</span>
+                                <span id="screener-progress-percent">0%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div id="screener-progress-bar" class="progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats Cards -->
+                <div class="screener-stats-container hidden" id="screener-stats">
+                    <div class="mini-stat-card">
+                        <span class="stat-label">Tổng mã đã quét</span>
+                        <span id="stat-scanned-count" class="stat-val">0 / 120</span>
+                    </div>
+                    <div class="mini-stat-card buy-stat">
+                        <span class="stat-label">Cơ hội Mua mạnh</span>
+                        <span id="stat-strong-buy-count" class="stat-val">0</span>
+                    </div>
+                    <div class="mini-stat-card buy-stat">
+                        <span class="stat-label">Cơ hội Mua</span>
+                        <span id="stat-buy-count" class="stat-val">0</span>
+                    </div>
+                    <div class="mini-stat-card sell-stat">
+                        <span class="stat-label">Cơ hội Bán / Rủi ro</span>
+                        <span id="stat-sell-count" class="stat-val">0</span>
+                    </div>
+                </div>
+
+                <!-- Screener Results Table -->
+                <div class="card full-width-card">
+                    <div class="card-header screener-results-header">
+                        <h2 class="card-title"><i class="fa-solid fa-list-ol"></i> Bảng xếp hạng cơ hội đầu tư (Sắp xếp theo Điểm VSA giảm dần)</h2>
+                        <div class="screener-filters">
+                            <button class="filter-btn active" data-filter="all">Tất cả</button>
+                            <button class="filter-btn text-success" data-filter="buy">Cơ hội Mua</button>
+                            <button class="filter-btn text-danger" data-filter="sell">Rủi ro / Bán</button>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table" id="screener-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Hạng</th>
+                                    <th style="width: 100px;">Mã CK</th>
+                                    <th>Giá Đóng Cửa</th>
+                                    <th>Thay Đổi (%)</th>
+                                    <th>Điểm VSA</th>
+                                    <th>Xu hướng EMA50</th>
+                                    <th>Setup Dòng Tiền</th>
+                                    <th>Hành Động Khuyến Nghị</th>
+                                    <th style="width: 120px; text-align: center;">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="screener-table-body">
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted" style="padding: 40px 0;">
+                                        <i class="fa-solid fa-magnifying-glass" style="font-size: 24px; margin-bottom: 10px; display: block; color: var(--text-muted);"></i>
+                                        Nhấn nút <strong>"Bắt đầu rà soát thị trường"</strong> để quét các cơ hội tốt nhất.
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

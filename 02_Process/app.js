@@ -57,9 +57,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // View Switchers
     const btnDashboard = document.getElementById("btn-dashboard");
     const btnSignals = document.getElementById("btn-signals");
+    const btnScreener = document.getElementById("btn-screener");
     const btnHistory = document.getElementById("btn-history");
     const dashboardView = document.getElementById("dashboard-view");
     const signalsView = document.getElementById("signals-view");
+    const screenerView = document.getElementById("screener-view");
     const historyView = document.getElementById("history-view");
 
     // Indicator Elements (in Signals View)
@@ -94,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const views = [
         { btn: btnDashboard, el: dashboardView },
         { btn: btnSignals, el: signalsView },
+        { btn: btnScreener, el: screenerView },
         { btn: btnHistory, el: historyView }
     ];
 
@@ -568,26 +571,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Support and Resistance pivots calculation
-    function calculateSupportResistance() {
-        if (processedData.length < 50) return { support: null, resistance: null };
+    function calculateSupportResistance(data = processedData) {
+        if (!data || data.length < 50) return { support: null, resistance: null };
 
         const supports = [];
         const resistances = [];
-        const lookback = Math.min(100, processedData.length);
-        const startIndex = processedData.length - lookback;
+        const lookback = Math.min(100, data.length);
+        const startIndex = data.length - lookback;
 
         // Window size of 5 days
         const window = 5;
 
-        for (let i = startIndex + window; i < processedData.length - window; i++) {
-            const currentClose = processedData[i].close;
+        for (let i = startIndex + window; i < data.length - window; i++) {
+            const currentClose = data[i].close;
             let isPeak = true;
             let isTrough = true;
 
             for (let j = i - window; j <= i + window; j++) {
                 if (i === j) continue;
-                if (processedData[j].close >= currentClose) isPeak = false;
-                if (processedData[j].close <= currentClose) isTrough = false;
+                if (data[j].close >= currentClose) isPeak = false;
+                if (data[j].close <= currentClose) isTrough = false;
             }
 
             if (isPeak) {
@@ -598,7 +601,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        const latestClose = processedData[processedData.length - 1].close;
+        const latestClose = data[data.length - 1].close;
         
         // Sort resistances above current close (ascending)
         const activeResistances = resistances
@@ -753,7 +756,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Date range
         const oldest = rawData[rawData.length - 1];
-        dataRangeLabel.textContent = `Dữ liệu VIX từ ${oldest.dateStr} đến ${latest.dateStr}`;
+        dataRangeLabel.textContent = `Dữ liệu ${currentTicker} từ ${oldest.dateStr} đến ${latest.dateStr}`;
 
         // KPI 1: Close
         kpiClose.textContent = formatMoney(latest.close) + " đ";
@@ -781,9 +784,7 @@ document.addEventListener("DOMContentLoaded", () => {
             kpiRsi.textContent = "--";
             kpiRsiSub.textContent = "Không đủ dữ liệu";
         }
-
-        // KPI 4: SMA Trend
-        if (latest.sma20) {
+                if (latest.sma20) {
             const diffPct = ((latest.close - latest.sma20) / latest.sma20) * 100;
             kpiTrend.textContent = latest.close > latest.sma20 ? "Tăng giá" : "Giảm giá";
             kpiTrend.className = "kpi-value " + (latest.close > latest.sma20 ? "text-success" : "text-danger");
@@ -793,31 +794,39 @@ document.addEventListener("DOMContentLoaded", () => {
             kpiSmaSub.textContent = "Chưa có đường SMA";
         }
 
-        generateAISignal();
+        const result = analyzeSingleTickerData(currentTicker, processedData);
+        renderAISignalUI(result);
     }
 
-    function generateAISignal() {
-        const checklistItems = document.getElementById("checklist-items");
-        const setupIcon = document.getElementById("setup-icon");
-        const setupName = document.getElementById("setup-name");
-        const opportunityValue = document.getElementById("opportunity-value");
-        const opportunityBar = document.getElementById("opportunity-bar");
-        const setupAction = document.getElementById("setup-action");
-        const setupExplanation = document.getElementById("setup-explanation");
-        
-        if (processedData.length < 20) {
-            mainSignalBadge.textContent = "Thiếu Dữ Liệu";
-            mainSignalBadge.className = "signal-value-badge neutral";
-            if (checklistItems) {
-                checklistItems.innerHTML = `<li class="checklist-placeholder">Cần tối thiểu 20 phiên dữ liệu để tính toán chỉ báo.</li>`;
-            }
-            if (setupName) setupName.textContent = "Thiếu dữ liệu lịch sử";
-            return;
+    function analyzeSingleTickerData(ticker, data) {
+        if (!data || data.length < 20) {
+            return {
+                ticker: ticker,
+                close: 0,
+                changePct: 0,
+                score: 0,
+                signalText: "Thiếu Dữ Liệu",
+                signalClass: "neutral",
+                confidence: "--",
+                buyZone: "--",
+                target: "--",
+                stopLoss: "--",
+                explanation: "Cần tối thiểu 20 phiên dữ liệu để tính toán chỉ báo.",
+                setupTitle: "Thiếu dữ liệu lịch sử",
+                setupIconHtml: `<i class="fa-solid fa-triangle-exclamation"></i>`,
+                oppValText: "--",
+                oppPercent: 0,
+                oppClass: "neutral-low",
+                actionText: "ĐANG TÍNH TOÁN...",
+                explanationText: "Không có đủ dữ liệu lịch sử để quét các setup dòng tiền.",
+                checklist: [],
+                ema50Slope: 0
+            };
         }
 
-        const latestIdx = processedData.length - 1;
-        const today = processedData[latestIdx];
-        const yesterday = processedData[latestIdx - 1];
+        const latestIdx = data.length - 1;
+        const today = data[latestIdx];
+        const yesterday = data[latestIdx - 1];
         
         const close = today.close;
         const sma = today.sma20;
@@ -826,15 +835,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 1. Tính toán Xu hướng cấu trúc trung-dài hạn (EMA50 Slope)
         let ema50Slope = 0;
-        if (latestIdx >= 5 && today.ema50 && processedData[latestIdx - 5].ema50) {
-            ema50Slope = (today.ema50 - processedData[latestIdx - 5].ema50) / 5;
+        if (latestIdx >= 5 && today.ema50 && data[latestIdx - 5].ema50) {
+            ema50Slope = (today.ema50 - data[latestIdx - 5].ema50) / 5;
         }
 
         // Tính trung bình khối lượng 20 phiên qua
         let avgVol = 0;
         for (let i = 0; i < 20; i++) {
             const idx = latestIdx - i;
-            if (idx >= 0) avgVol += processedData[idx].volume;
+            if (idx >= 0) avgVol += data[idx].volume;
         }
         avgVol = avgVol / 20;
 
@@ -843,7 +852,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let score = 0;
         let checklist = [];
 
-        // --- LỚP 1: CẤU TRÚC XU HƯỚNG DÀI HẠN (Trọng số lớn - Không phụ thuộc 1 phiên) ---
+        // --- LỚP 1: CẤU TRÚC XU HƯỚNG DÀI HẠN ---
         const isLongTermUptrend = today.ema50 && ema50Slope > 0 && close > today.ema50;
         const isLongTermDowntrend = today.ema50 && ema50Slope < 0 && close < today.ema50;
 
@@ -851,54 +860,51 @@ document.addEventListener("DOMContentLoaded", () => {
             score += 2;
             checklist.push({
                 type: "bullish",
-                label: `Cấu trúc Uptrend dài hạn: Giá trên EMA50 dốc lên`,
+                label: `Cấu trúc Uptrend dài hạn vững chắc (Giá nằm trên EMA50 hướng lên)`,
                 score: 2
             });
-            
-            if (today.ema20 && close > today.ema20) {
-                score += 1;
-                checklist.push({
-                    type: "bullish",
-                    label: `Đồng thuận xu hướng ngắn hạn: Giá nằm trên EMA20`,
-                    score: 1
-                });
-            }
         } else if (isLongTermDowntrend) {
-            score -= 2;
+            score -= 2.5;
             checklist.push({
                 type: "bearish",
-                label: `Cấu trúc Downtrend dài hạn: Giá dưới EMA50 dốc xuống`,
-                score: -2
+                label: `Cấu trúc Downtrend dài hạn nguy hiểm (Giá nằm dưới EMA50 hướng xuống)`,
+                score: -2.5
             });
-            
-            if (today.ema20 && close < today.ema20) {
-                score -= 1;
-                checklist.push({
-                    type: "bearish",
-                    label: `Đồng thuận xu hướng giảm ngắn hạn: Giá nằm dưới EMA20`,
-                    score: -1
-                });
-            }
         } else {
             checklist.push({
                 type: "neutral",
-                label: `Cấu trúc giá đi ngang (Sideway), EMA50 đi ngang`,
+                label: `Xu hướng dài hạn chưa rõ ràng (Giá dao động quanh EMA50 đi ngang)`,
                 score: 0
             });
         }
 
-        // EMA Cross trong 5 phiên gần nhất
+        // Giá so với SMA20 (Xu hướng ngắn hạn)
+        if (sma) {
+            if (close > sma) {
+                score += 1;
+                checklist.push({
+                    type: "bullish",
+                    label: `Ngắn hạn tích cực (Giá đóng cửa vượt trên đường SMA20)`,
+                    score: 1
+                });
+            } else {
+                score -= 1;
+                checklist.push({
+                    type: "bearish",
+                    label: `Ngắn hạn tiêu cực (Giá đóng cửa nằm dưới đường SMA20)`,
+                    score: -1
+                });
+            }
+        }
+
+        // Giao cắt đường EMA20/EMA50
         let goldenCross = false;
         let deathCross = false;
-        for (let i = 0; i < 5; i++) {
-            const idx = latestIdx - i;
-            if (idx > 0 && processedData[idx].ema20 && processedData[idx].ema50) {
-                const t = processedData[idx];
-                const y = processedData[idx - 1];
-                if (y.ema20 && y.ema50) {
-                    if (y.ema20 <= y.ema50 && t.ema20 > t.ema50) goldenCross = true;
-                    if (y.ema20 >= y.ema50 && t.ema20 < t.ema50) deathCross = true;
-                }
+        if (today.ema20 && today.ema50 && yesterday.ema20 && yesterday.ema50) {
+            if (yesterday.ema20 <= yesterday.ema50 && today.ema20 > today.ema50) {
+                goldenCross = true;
+            } else if (yesterday.ema20 >= yesterday.ema50 && today.ema20 < today.ema50) {
+                deathCross = true;
             }
         }
         if (goldenCross && !isLongTermDowntrend) {
@@ -956,7 +962,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // RSI
         if (rsi) {
             if (rsi < 30) {
                 score += 1;
@@ -975,29 +980,23 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // --- LỚP 3: BIẾN ĐỘNG & VÙNG CỰC TRỊ (Bollinger Bands & Cản cứng) ---
-        const sr = calculateSupportResistance();
+        // --- LỚP 3: BIẾN ĐỘNG & VÙNG CỰC TRỊ ---
+        const sr = calculateSupportResistance(data);
         let distSupport = 999;
         let distResist = 999;
 
         if (sr.support) distSupport = (close - sr.support) / sr.support;
         if (sr.resistance) distResist = (sr.resistance - close) / close;
 
-        // Bollinger Bands
         if (today.bbUpper && today.bbLower) {
-            const low = today.low;
-            const high = today.high;
-            const bbu = today.bbUpper;
-            const bbl = today.bbLower;
-
-            if (low <= bbl && close > bbl) {
+            if (today.low <= today.bbLower && close > today.bbLower) {
                 score += 1;
                 checklist.push({
                     type: "bullish",
                     label: `Giá chạm dải dưới Bollinger Bands rút chân lên`,
                     score: 1
                 });
-            } else if (high >= bbu && close < bbu) {
+            } else if (today.high >= today.bbUpper && close < today.bbUpper) {
                 score -= 1;
                 checklist.push({
                     type: "bearish",
@@ -1007,7 +1006,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // Khoảng cách hỗ trợ/kháng cự cứng
         if (distSupport <= 0.025 && distSupport >= 0) {
             score += 1;
             checklist.push({
@@ -1025,8 +1023,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // --- LỚP 4: NHẬN DIỆN SETUP QUY LUẬT DÒNG TIỀN KINH ĐIỂN (VSA/Wyckoff) ---
-        // 1. Setup 1: Bẫy giảm giá (Spring) tại hỗ trợ cứng
+        // --- LỚP 4: NHẬN DIỆN SETUP VSA/WYCKOFF ---
         let isSpring = false;
         const todayLowerShadow = Math.min(today.open, today.close) - today.low;
         const todayBody = Math.abs(today.close - today.open) || 1;
@@ -1038,13 +1035,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 2. Setup 2: Điểm mua breakout bùng nổ (Chỉ ghi nhận trong UPTREND trung hạn để lọc Bulltrap)
         let isBreakout = false;
         let max20Close = 0;
         for (let i = 1; i <= 20; i++) {
             const idx = latestIdx - i;
-            if (idx >= 0 && processedData[idx].close > max20Close) {
-                max20Close = processedData[idx].close;
+            if (idx >= 0 && data[idx].close > max20Close) {
+                max20Close = data[idx].close;
             }
         }
         if (close > max20Close && vol > avgVol * 1.7) {
@@ -1059,21 +1055,20 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 3. Setup 3: Tích lũy nén chặt kiệt vol (VCP)
         let isVCP = false;
         let max15Price = 0;
         let min15Price = 99999999;
         for (let i = 0; i < 15; i++) {
             const idx = latestIdx - i;
             if (idx >= 0) {
-                if (processedData[idx].close > max15Price) max15Price = processedData[idx].close;
-                if (processedData[idx].close < min15Price) min15Price = processedData[idx].close;
+                if (data[idx].close > max15Price) max15Price = data[idx].close;
+                if (data[idx].close < min15Price) min15Price = data[idx].close;
             }
         }
         const spread15 = (max15Price - min15Price) / min15Price;
         let recent3Vol = 0;
         for (let i = 0; i < 3; i++) {
-            recent3Vol += processedData[latestIdx - i].volume;
+            recent3Vol += data[latestIdx - i].volume;
         }
         recent3Vol = recent3Vol / 3;
 
@@ -1081,12 +1076,11 @@ document.addEventListener("DOMContentLoaded", () => {
             isVCP = true;
         }
 
-        // 4. Setup 4: Đà tăng Momentum gia tốc
         let isMomentumSurge = false;
         if (latestIdx >= 2) {
-            const p0 = processedData[latestIdx - 2];
-            const p1 = processedData[latestIdx - 1];
-            const p2 = processedData[latestIdx];
+            const p0 = data[latestIdx - 2];
+            const p1 = data[latestIdx - 1];
+            const p2 = data[latestIdx];
 
             if (p2.close > p1.close && p1.close > p0.close &&
                 p2.close > p2.open && p1.close > p1.open && p0.close > p0.open &&
@@ -1095,14 +1089,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 5. Setup 5: Cá mập gom hàng (Smart Money Accumulation)
         let isSharkAccumulation = false;
         let smartBuyDays = 0;
         let smartSellDays = 0;
         for (let i = 0; i < 20; i++) {
             const idx = latestIdx - i;
             if (idx >= 0) {
-                const p = processedData[idx];
+                const p = data[idx];
                 if (p.volume > avgVol * 1.25) {
                     if (p.changePct > 1.0) smartBuyDays++;
                     if (p.changePct < -1.0) smartSellDays++;
@@ -1113,14 +1106,13 @@ document.addEventListener("DOMContentLoaded", () => {
             isSharkAccumulation = true;
         }
 
-        // Cộng điểm thưởng từ Setup phát hiện được vào hệ thống chấm điểm chung
         let setupTitle = "Chưa hình thành Setup rõ ràng";
         let setupIconHtml = `<i class="fa-solid fa-magnifying-glass-chart"></i>`;
         let oppValText = "30% (Thấp)";
         let oppPercent = 30;
         let oppClass = "neutral-low";
         let actionText = "ĐỨNG NGOÀI QUAN SÁT";
-        let explanationText = `Cổ phiếu hiện tại đang vận động tích lũy tự nhiên và chưa có các dấu hiệu đột biến dòng tiền hay bẫy giá của cá mập. Khuyên nghị nhà đầu tư kiên nhẫn nắm giữ tiền mặt hoặc hàng có sẵn, chờ đợi tín hiệu dòng tiền kích hoạt quy luật tăng giá mới.`;
+        let explanationText = `Cổ phiếu hiện tại đang vận động tích lũy tự nhiên và chưa có các dấu hiệu đột biến dòng tiền hay bẫy giá của cá mập. Khuyến nghị nhà đầu tư kiên nhẫn nắm giữ tiền mặt hoặc hàng có sẵn, chờ đợi tín hiệu dòng tiền kích hoạt quy luật tăng giá mới.`;
 
         if (isSpring) {
             score += 3;
@@ -1131,11 +1123,7 @@ document.addEventListener("DOMContentLoaded", () => {
             oppClass = "very-high";
             actionText = "MUA MẠNH MẼ ĐÓN SÓNG";
             explanationText = `Quy luật Bear Trap kích hoạt khi giá cố tình đạp thủng vùng hỗ trợ cứng ${formatMoney(sr.support)}đ nhằm ép nhỏ lẻ cắt lỗ hoảng loạn. Ngay lập tức dòng tiền lớn nhập cuộc thu gom quyết liệt giúp giá rút chân mạnh mẽ với khối lượng lớn. Đây là quy luật gom hàng cướp cạn kinh điển, báo hiệu nhịp tăng mạnh sắp xảy ra.`;
-            checklist.push({
-                type: "bullish",
-                label: `Quy luật Dòng tiền: Bear Trap tại hỗ trợ cứng`,
-                score: 3
-            });
+            checklist.push({ type: "bullish", label: `Quy luật Dòng tiền: Bear Trap tại hỗ trợ cứng`, score: 3 });
         } else if (isBreakout) {
             score += 2.5;
             setupTitle = "Điểm Mua Đột Phá Nền Giá (Volume Breakout)";
@@ -1145,11 +1133,7 @@ document.addEventListener("DOMContentLoaded", () => {
             oppClass = "high";
             actionText = "MUA BỨT PHÁ (BUY BREAKOUT)";
             explanationText = `Quy luật bứt phá xác nhận khi giá đóng cửa vượt đỉnh 20 phiên gần nhất (${formatMoney(max20Close)}đ) đi kèm khối lượng giao dịch bùng nổ (+${((vol/avgVol - 1)*100).toFixed(0)}% so với trung bình). Điều này cho thấy dòng tiền lớn quyết định đẩy giá qua khỏi vùng kháng cự. Đây là điểm mua bám đuổi xu hướng tăng (Trend Following) có độ tin cậy cao nhất.`;
-            checklist.push({
-                type: "bullish",
-                label: `Quy luật Dòng tiền: Đột phá nền giá (Uptrend)`,
-                score: 2.5
-            });
+            checklist.push({ type: "bullish", label: `Quy luật Dòng tiền: Đột phá nền giá (Uptrend)`, score: 2.5 });
         } else if (isVCP) {
             score += 2;
             setupTitle = "Tích Lũy Nền Phẳng Nén Chặt (VCP - Kiệt Nguồn Cung)";
@@ -1158,12 +1142,8 @@ document.addEventListener("DOMContentLoaded", () => {
             oppPercent = 75;
             oppClass = "high";
             actionText = "MUA GOM TÍCH LŨY (BUY ON BASE)";
-            explanationText = `Quy luật Vắt kiệt nguồn cung (VCP) thể hiện qua biên độ dao động giá siêu nhỏ trong 15 phiên (${(spread15*100).toFixed(1)}%) đi kèm khối lượng giao dịch kiệt quệ (-${((1 - recent3Vol/avgVol)*100).toFixed(0)}% so với trung bình). Lực cung bán ra đã hoàn toàn bị triệt tiêu, cổ phiếu như lò xo nén chặt chỉ cần lực cầu nhẹ là bứt phá mạnh. Khuyên nghị mua gom tích lũy lấy vị thế ở nền giá này.`;
-            checklist.push({
-                type: "bullish",
-                label: `Quy luật Dòng tiền: Tích lũy nén chặt kiệt vol (VCP)`,
-                score: 2
-            });
+            explanationText = `Quy luật Vắt kiệt nguồn cung (VCP) thể hiện qua biên độ dao động giá siêu nhỏ trong 15 phiên (${(spread15*100).toFixed(1)}%) đi kèm khối lượng giao dịch kiệt quệ (-${((1 - recent3Vol/avgVol)*100).toFixed(0)}% so với trung bình). Lực cung bán ra đã hoàn toàn bị triệt tiêu, cổ phiếu như lò xo nén chặt chỉ cần lực cầu nhẹ là bứt phá mạnh. Khuyến nghị mua gom tích lũy lấy vị thế ở nền giá này.`;
+            checklist.push({ type: "bullish", label: `Quy luật Dòng tiền: Tích lũy nén chặt kiệt vol (VCP)`, score: 2 });
         } else if (isMomentumSurge) {
             score += 2;
             setupTitle = "Đà Tăng Gia Tốc Bứt Phá (Momentum Surge)";
@@ -1172,12 +1152,8 @@ document.addEventListener("DOMContentLoaded", () => {
             oppPercent = 80;
             oppClass = "high";
             actionText = "MUA GIA TĂNG TỶ TRỌNG";
-            explanationText = `Quy luật đà tăng mạnh mẽ (3 Chàng lính trắng) xuất hiện với 3 phiên tăng liên tiếp, giá đóng cửa tăng dần đi kèm khối lượng tăng dần đều qua từng phiên. Điều này chứng minh dòng tiền cuồn cuộn đổ vào đẩy giá đi lên bất chấp. Xung lực tăng rất mạnh, khuyên nghị mua gia tăng vị thế hoặc mua bám đuổi sóng ngắn hạn.`;
-            checklist.push({
-                type: "bullish",
-                label: `Quy luật Dòng tiền: Đà tăng Momentum gia tốc`,
-                score: 2
-            });
+            explanationText = `Quy luật đà tăng mạnh mẽ (3 Chàng lính trắng) xuất hiện với 3 phiên tăng liên tiếp, giá đóng cửa tăng dần đi kèm khối lượng tăng dần đều qua từng phiên. Điều này chứng minh dòng tiền cuồn cuộn đổ vào đẩy giá đi lên bất chấp. Xung lực tăng rất mạnh, khuyến nghị mua gia tăng vị thế hoặc mua bám đuổi sóng ngắn hạn.`;
+            checklist.push({ type: "bullish", label: `Quy luật Dòng tiền: Đà tăng Momentum gia tốc`, score: 2 });
         } else if (isSharkAccumulation) {
             score += 1.5;
             setupTitle = "Dấu Chân Cá Mập Gom Hàng (Smart Money Accumulation)";
@@ -1187,14 +1163,9 @@ document.addEventListener("DOMContentLoaded", () => {
             oppClass = "high";
             actionText = "MUA TÍCH LŨY CÙNG CÁ MẬP";
             explanationText = `Thuật toán phát hiện dòng tiền thông minh của tổ chức âm thầm thu gom hàng trong 20 phiên qua. Biểu hiện qua số phiên tăng vol lớn chủ đạo chiếm ưu thế so với các phiên giảm vol lớn, đồng thời giá không bị kéo tăng quá mạnh nhằm tránh sự chú ý. Đây là cơ hội mua tích lũy an toàn cùng giá vốn của cá mập.`;
-            checklist.push({
-                type: "bullish",
-                label: `Quy luật Dòng tiền: Cá mập gom hàng âm thầm`,
-                score: 1.5
-            });
+            checklist.push({ type: "bullish", label: `Quy luật Dòng tiền: Cá mập gom hàng âm thầm`, score: 1.5 });
         }
 
-        // Giới hạn điểm số định lượng cuối cùng trong [-10, 10]
         const finalScore = Math.max(-10, Math.min(10, Math.round(score * 2) / 2));
         
         let signalText = "THEO DÕI";
@@ -1212,8 +1183,7 @@ document.addEventListener("DOMContentLoaded", () => {
             buyZone = `${formatMoney(Math.round(close * 0.98))} - ${formatMoney(Math.round(close * 1.015))} đ`;
             target = sr.resistance ? `${formatMoney(sr.resistance)} đ (Kháng cự)` : `${formatMoney(Math.round(close * 1.12))} đ (+12%)`;
             stopLoss = sr.support ? `${formatMoney(Math.round(sr.support * 0.975))} đ` : `${formatMoney(Math.round(close * 0.94))} đ (-6%)`;
-            
-            explanation = `Hệ thống Phân tích Định lượng & Dòng tiền cho kết quả đồng thuận tăng cực kỳ mạnh mẽ đạt <strong>+${finalScore >= 0 ? '+' : ''}${finalScore} điểm</strong>. Cổ phiếu đang có sự hỗ trợ của xu hướng lớn dài hạn vững chắc và xuất hiện các setup dòng tiền đáng tin cậy. Khuyên nghị hành động chiến thuật: <strong>${actionText}</strong>.`;
+            explanation = `Hệ thống Phân tích Định lượng & Dòng tiền cho kết quả đồng thuận tăng cực kỳ mạnh mẽ đạt <strong>+${finalScore >= 0 ? '+' : ''}${finalScore} điểm</strong>. Cổ phiếu đang có sự hỗ trợ của xu hướng lớn dài hạn vững chắc và xuất hiện các setup dòng tiền đáng tin cậy. Khuyến nghị hành động chiến thuật: <strong>${actionText}</strong>.`;
         } else if (finalScore >= 2) {
             signalText = "MUA";
             signalClass = "buy";
@@ -1221,12 +1191,7 @@ document.addEventListener("DOMContentLoaded", () => {
             buyZone = `${formatMoney(Math.round(close * 0.975))} - ${formatMoney(Math.round(close * 1.005))} đ`;
             target = sr.resistance ? `${formatMoney(sr.resistance)} đ` : `${formatMoney(Math.round(close * 1.08))} đ (+8%)`;
             stopLoss = sr.support ? `${formatMoney(Math.round(sr.support * 0.975))} đ` : `${formatMoney(Math.round(close * 0.94))} đ (-6%)`;
-            
-            if (isLongTermUptrend) {
-                explanation = `Hệ thống chấm điểm đạt mức tích cực <strong>+${finalScore} điểm</strong>. Cổ phiếu đang vận động trong xu hướng tăng lớn ổn định, các nhịp điều chỉnh rung lắc ngắn hạn là cơ hội tốt để tích lũy hàng giá đỏ. Khuyên nghị hành động chiến thuật: <strong>${actionText}</strong>.`;
-            } else {
-                explanation = `Hệ thống chấm điểm đạt <strong>+${finalScore} điểm</strong>, xu hướng đang cải thiện dần từ vùng tích lũy đáy. Khuyên nghị nhà đầu tư mở vị thế mua gom thăm dò từng phần. Khuyên nghị hành động chiến thuật: <strong>${actionText}</strong>.`;
-            }
+            explanation = isLongTermUptrend ? `Hệ thống chấm điểm đạt mức tích cực <strong>+${finalScore} điểm</strong>. Cổ phiếu đang vận động trong xu hướng tăng lớn ổn định, các nhịp điều chỉnh rung lắc ngắn hạn là cơ hội tốt để tích lũy hàng giá đỏ. Khuyến nghị hành động chiến thuật: <strong>${actionText}</strong>.` : `Hệ thống chấm điểm đạt <strong>+${finalScore} điểm</strong>, xu hướng đang cải thiện dần từ vùng tích lũy đáy. Khuyến nghị nhà đầu tư mở vị thế mua gom thăm dò từng phần. Khuyến nghị hành động chiến thuật: <strong>${actionText}</strong>.`;
         } else if (finalScore <= -6) {
             signalText = "BÁN MẠNH";
             signalClass = "sell";
@@ -1235,8 +1200,7 @@ document.addEventListener("DOMContentLoaded", () => {
             target = "Thu hồi tiền mặt";
             stopLoss = "Hạ tỷ trọng / Bán hết";
             actionText = "BÁN HẠ TỶ TRỌNG TỐI ĐA";
-            
-            explanation = `Hệ thống cảnh báo tiêu cực mức độ cao đạt <strong>${finalScore} điểm</strong>. Cổ phiếu bị gãy các mốc hỗ trợ cấu trúc trung hạn quan trọng trong khi EMA50 đang dốc xuống mạnh. Tuyệt đối không bắt đáy cảm tính. Khuyên nghị hành động chiến thuật: <strong>${actionText}</strong>.`;
+            explanation = `Hệ thống cảnh báo tiêu cực mức độ cao đạt <strong>${finalScore} điểm</strong>. Cổ phiếu bị gãy các mốc hỗ trợ cấu trúc trung hạn quan trọng trong khi EMA50 đang dốc xuống mạnh. Tuyệt đối không bắt đáy cảm tính. Khuyến nghị hành động chiến thuật: <strong>${actionText}</strong>.`;
         } else if (finalScore <= -2) {
             signalText = "BÁN";
             signalClass = "sell";
@@ -1245,8 +1209,7 @@ document.addEventListener("DOMContentLoaded", () => {
             target = "Chờ tích lũy lại";
             stopLoss = "Bán hạ tỷ trọng";
             actionText = "HẠ TỶ TRỌNG CƠ CẤU";
-            
-            explanation = `Hệ thống ghi nhận điểm số yếu <strong>${finalScore} điểm</strong>. Cổ phiếu có dấu hiệu suy thoái dưới đường EMA20 và cấu trúc dài hạn đang xấu đi rõ rệt. Cần chủ động cơ cấu danh mục để bảo vệ vốn. Khuyên nghị hành động chiến thuật: <strong>${actionText}</strong>.`;
+            explanation = `Hệ thống ghi nhận điểm số yếu <strong>${finalScore} điểm</strong>. Cổ phiếu có dấu hiệu suy thoái dưới đường EMA20 và cấu trúc dài hạn đang xấu đi rõ rệt. Cần chủ động cơ cấu danh mục để bảo vệ vốn. Khuyến nghị hành động chiến thuật: <strong>${actionText}</strong>.`;
         } else {
             signalText = "THEO DÕI";
             signalClass = "neutral";
@@ -1255,40 +1218,71 @@ document.addEventListener("DOMContentLoaded", () => {
             target = `${formatMoney(Math.round(close * 1.05))} đ (+5%)`;
             stopLoss = `${formatMoney(Math.round(close * 0.95))} đ (-5%)`;
             actionText = "TẠM THỜI QUAN SÁT";
-            
-            explanation = `Điểm số định lượng ở trạng thái trung tính <strong>${finalScore >= 0 ? '+' : ''}${finalScore} điểm</strong>. Các chỉ báo và dòng tiền đang giằng co chưa có xu hướng bứt phá rõ nét. Khuyên nghị nhà đầu tư tạm thời nắm giữ tỷ trọng an toàn và kiên nhẫn quan sát. Khuyên nghị hành động chiến thuật: <strong>${actionText}</strong>.`;
+            explanation = `Điểm số định lượng ở trạng thái trung tính <strong>${finalScore >= 0 ? '+' : ''}${finalScore} điểm</strong>. Các chỉ báo và dòng tiền đang giằng co chưa có xu hướng bứt phá rõ nét. Khuyến nghị nhà đầu tư tạm thời nắm giữ tỷ trọng an toàn và kiên nhẫn quan sát. Khuyến nghị hành động chiến thuật: <strong>${actionText}</strong>.`;
         }
 
-        // Cập nhật UI Card AI Signal
-        mainSignalBadge.textContent = signalText;
-        mainSignalBadge.className = `signal-value-badge ${signalClass}`;
+        return {
+            ticker: ticker,
+            close: close,
+            changePct: today.changePct,
+            score: finalScore,
+            signalText: signalText,
+            signalClass: signalClass,
+            confidence: confidence,
+            buyZone: buyZone,
+            target: target,
+            stopLoss: stopLoss,
+            explanation: explanation,
+            setupTitle: setupTitle,
+            setupIconHtml: setupIconHtml,
+            oppValText: oppValText,
+            oppPercent: oppPercent,
+            oppClass: oppClass,
+            actionText: actionText,
+            explanationText: explanationText,
+            checklist: checklist,
+            ema50Slope: ema50Slope
+        };
+    }
+
+    function renderAISignalUI(result) {
+        const checklistItems = document.getElementById("checklist-items");
+        const setupIcon = document.getElementById("setup-icon");
+        const setupName = document.getElementById("setup-name");
+        const opportunityValue = document.getElementById("opportunity-value");
+        const opportunityBar = document.getElementById("opportunity-bar");
+        const setupAction = document.getElementById("setup-action");
+        const setupExplanation = document.getElementById("setup-explanation");
+
+        mainSignalBadge.textContent = result.signalText;
+        mainSignalBadge.className = `signal-value-badge ${result.signalClass}`;
         
         const signalScore = document.getElementById("signal-score");
         if (signalScore) {
-            signalScore.innerHTML = `<span class="${finalScore >= 0 ? 'text-success' : 'text-danger'}">${finalScore >= 0 ? '+' : ''}${finalScore}</span> / 10`;
+            signalScore.innerHTML = `<span class="${result.score >= 0 ? 'text-success' : 'text-danger'}">${result.score >= 0 ? '+' : ''}${result.score}</span> / 10`;
         }
 
-        signalConfidence.textContent = confidence;
-        signalBuyZone.textContent = buyZone;
-        signalTarget.textContent = target;
-        signalStopLoss.textContent = stopLoss;
-        signalExplanation.innerHTML = explanation;
+        signalConfidence.textContent = result.confidence;
+        signalBuyZone.textContent = result.buyZone;
+        signalTarget.textContent = result.target;
+        signalStopLoss.textContent = result.stopLoss;
+        signalExplanation.innerHTML = result.explanation;
 
         // Cập nhật UI Card Setup Dòng Tiền (Thống nhất khuyến nghị)
-        if (setupName) setupName.textContent = setupTitle;
-        if (setupIcon) setupIcon.innerHTML = setupIconHtml;
-        if (opportunityValue) opportunityValue.textContent = oppValText;
-        if (setupAction) setupAction.textContent = actionText;
-        if (setupExplanation) setupExplanation.innerHTML = explanationText;
+        if (setupName) setupName.textContent = result.setupTitle;
+        if (setupIcon) setupIcon.innerHTML = result.setupIconHtml;
+        if (opportunityValue) opportunityValue.textContent = result.oppValText;
+        if (setupAction) setupAction.textContent = result.actionText;
+        if (setupExplanation) setupExplanation.innerHTML = result.explanationText;
         if (opportunityBar) {
-            opportunityBar.className = `opportunity-bar-fill ${oppClass}`;
-            opportunityBar.style.width = `${oppPercent}%`;
+            opportunityBar.className = `opportunity-bar-fill ${result.oppClass}`;
+            opportunityBar.style.width = `${result.oppPercent}%`;
         }
 
         // Render checklist HTML
         if (checklistItems) {
             checklistItems.innerHTML = "";
-            checklist.forEach(item => {
+            result.checklist.forEach(item => {
                 const li = document.createElement("li");
                 li.className = item.type;
                 
@@ -1879,28 +1873,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 logging: false,
                 backgroundColor: null // Giữ nền trong suốt cho các phần ngoài bo góc
             }).then(canvas => {
-                // Tạo link tải ảnh
-                const link = document.createElement("a");
-                const ticker = currentTicker || "VIX";
-                
-                // Ngày định dạng DD-MM-YYYY
-                const latest = rawData[0];
-                const dateStr = latest ? latest.dateStr.replace(/\//g, "-") : new Date().toLocaleDateString('vi-VN').replace(/\//g, "-");
-                
-                link.download = `[HongKinhTe]_${ticker}_${dateStr}_1x1_4K.png`;
-                link.href = canvas.toDataURL("image/png");
-                link.click();
-
-                // Khôi phục trạng thái nút bấm
-                btnDownloadTiktok4k.disabled = false;
-                btnDownloadTiktok4k.innerHTML = originalBtnText;
-
-                // Khôi phục trạng thái node DOM cũ
-                node.style.transform = originalTransform;
-                node.style.position = originalPosition;
-                node.style.top = originalTop;
-                node.style.left = originalLeft;
-                node.style.zIndex = originalZIndex;
             }).catch(err => {
                 console.error("Lỗi xuất ảnh 4K:", err);
                 alert("Lỗi xuất ảnh 4K: " + err.message);
@@ -1916,4 +1888,430 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }, 200);
     }
+
+    // ----------------------------------------------------
+    // BỘ LỌC RÀ SOÁT THỊ TRƯỜNG CHỨNG KHOÁN VIỆT NAM (SCREENER)
+    // ----------------------------------------------------
+    const SCREENER_TICKERS = [
+        "VCB", "BID", "CTG", "TCB", "VPB", "MBB", "ACB", "HDB", "STB", "SHB", "VIB", "TPB", "LPB", "MSB", "OCB", "EIB",
+        "SSI", "VND", "VCI", "HCM", "SHS", "MBS", "FTS", "BSI", "CTS", "ORS", "AGR", "VIX",
+        "HPG", "HSG", "NKG", "VGS",
+        "VIC", "VHM", "VRE", "NVL", "KDH", "NLG", "DXG", "DIG", "PDR", "CEO", "TCH", "KBC", "SZC", "IDC", "VGC",
+        "MSN", "MWG", "PNJ", "FRT", "DGW", "VNM", "SAB",
+        "GAS", "PLX", "PVD", "PVS", "PVT", "BSR", "POW", "PC1", "GEE",
+        "DGC", "DCM", "DPM", "CSV",
+        "VCG", "HHV", "LCG", "FCN", "KSB", "C4G",
+        "FPT", "CTR", "ELC", "ANV", "IDI", "VHC", "FMC", "GMD", "HAH", "REE",
+        "AAA", "ASM", "BCG", "BMP", "BWE", "CII", "CRE", "DBC", "DPG", "DXS",
+        "FIT", "GEG", "GEX", "HDG", "IJC", "ITA", "KOS", "LHG", "PAN", "PHR",
+        "PPC", "PTB", "SBT", "SCR", "SGP", "SJS", "TNG", "VPI", "VTO", "HT1",
+        "LIX", "NT2", "PET", "RAL", "SCS", "TCD", "TIP", "TDM", "TMP", "VIP"
+    ];
+
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    function parseVndirectData(ticker, d) {
+        if (!d || d.s !== "ok" || !d.t || d.t.length === 0) return null;
+        const dataRows = [];
+        const len = d.t.length;
+        for (let i = 0; i < len; i++) {
+            const timestamp = d.t[i];
+            const date = new Date(timestamp * 1000);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const dateStr = `${day}/${month}/${year}`;
+            const chartDate = `${year}-${month}-${day}`;
+
+            const closePrice = Math.round(d.c[i] * 1000);
+            const openPrice = Math.round(d.o[i] * 1000);
+            const highPrice = Math.round(d.h[i] * 1000);
+            const lowPrice = Math.round(d.l[i] * 1000);
+            const volume = d.v[i];
+
+            const refPrice = i > 0 ? Math.round(d.c[i-1] * 1000) : openPrice;
+            const change = closePrice - refPrice;
+            const changePct = refPrice > 0 ? (change / refPrice) * 100 : 0;
+            const avgPrice = Math.round((openPrice + highPrice + lowPrice + closePrice) / 4);
+            const value = Math.round(avgPrice * volume);
+
+            dataRows.push({
+                stt: i + 1,
+                dateStr,
+                chartDate,
+                ticker,
+                open: openPrice,
+                high: highPrice,
+                low: lowPrice,
+                close: closePrice,
+                ref: refPrice,
+                avg: avgPrice,
+                change,
+                changePct,
+                volume,
+                value,
+                totalVolume: volume,
+                totalValue: value
+            });
+        }
+        return dataRows;
+    }
+
+    function calculateScreenerIndicators(data) {
+        if (!data || data.length === 0) return data;
+        
+        // 1. Tính SMA 20
+        for (let i = 0; i < data.length; i++) {
+            if (i < 19) {
+                data[i].sma20 = null;
+            } else {
+                let sum = 0;
+                for (let j = i - 19; j <= i; j++) {
+                    sum += data[j].close;
+                }
+                data[i].sma20 = sum / 20;
+            }
+        }
+
+        // 2. Tính RSI 14
+        if (data.length >= 15) {
+            let gains = [];
+            let losses = [];
+            for (let i = 1; i < data.length; i++) {
+                let diff = data[i].close - data[i - 1].close;
+                gains.push(diff > 0 ? diff : 0);
+                losses.push(diff < 0 ? -diff : 0);
+            }
+            let avgGain = gains.slice(0, 14).reduce((a, b) => a + b, 0) / 14;
+            let avgLoss = losses.slice(0, 14).reduce((a, b) => a + b, 0) / 14;
+
+            if (avgLoss === 0) {
+                data[14].rsi14 = 100;
+            } else {
+                let rs = avgGain / avgLoss;
+                data[14].rsi14 = 100 - (100 / (1 + rs));
+            }
+
+            for (let i = 15; i < data.length; i++) {
+                let gain = gains[i - 1];
+                let loss = losses[i - 1];
+                avgGain = (avgGain * 13 + gain) / 14;
+                avgLoss = (avgLoss * 13 + loss) / 14;
+                if (avgLoss === 0) {
+                    data[i].rsi14 = 100;
+                } else {
+                    let rs = avgGain / avgLoss;
+                    data[i].rsi14 = 100 - (100 / (1 + rs));
+                }
+            }
+        }
+
+        // 3. Tính EMA 20 và EMA 50
+        calculateEMAForData(data, 20, 'ema20');
+        calculateEMAForData(data, 50, 'ema50');
+
+        // 4. Tính Bollinger Bands
+        for (let i = 0; i < data.length; i++) {
+            if (i < 19 || data[i].sma20 === null) {
+                data[i].bbUpper = null;
+                data[i].bbLower = null;
+                data[i].bbMiddle = null;
+            } else {
+                const sma = data[i].sma20;
+                let sumVariance = 0;
+                for (let j = i - 19; j <= i; j++) {
+                    sumVariance += Math.pow(data[j].close - sma, 2);
+                }
+                const stdDev = Math.sqrt(sumVariance / 20);
+                data[i].bbMiddle = sma;
+                data[i].bbUpper = sma + 2 * stdDev;
+                data[i].bbLower = sma - 2 * stdDev;
+            }
+        }
+
+        // 5. Tính MACD
+        calculateEMAForData(data, 12, 'ema12');
+        calculateEMAForData(data, 26, 'ema26');
+
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].ema12 !== null && data[i].ema26 !== null) {
+                data[i].macd = data[i].ema12 - data[i].ema26;
+            } else {
+                data[i].macd = null;
+            }
+        }
+
+        // Signal Line (EMA 9 of MACD)
+        let firstMacdIdx = -1;
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].macd !== null) {
+                firstMacdIdx = i;
+                break;
+            }
+        }
+
+        if (firstMacdIdx !== -1 && data.length - firstMacdIdx >= 9) {
+            let macdValues = [];
+            for (let i = firstMacdIdx; i < data.length; i++) {
+                macdValues.push({ close: data[i].macd });
+            }
+            calculateEMAForData(macdValues, 9, 'emaVal');
+            
+            let mvIdx = 0;
+            for (let i = 0; i < data.length; i++) {
+                if (i < firstMacdIdx) {
+                    data[i].macdSignal = null;
+                    data[i].macdHist = null;
+                } else {
+                    const emaVal = macdValues[mvIdx].emaVal;
+                    data[i].macdSignal = emaVal;
+                    if (data[i].macd !== null && emaVal !== null) {
+                        data[i].macdHist = data[i].macd - emaVal;
+                    } else {
+                        data[i].macdHist = null;
+                    }
+                    mvIdx++;
+                }
+            }
+        } else {
+            for (let i = 0; i < data.length; i++) {
+                data[i].macdSignal = null;
+                data[i].macdHist = null;
+            }
+        }
+
+        return data;
+    }
+
+    function calculateEMAForData(data, period, key) {
+        if (data.length < period) {
+            for (let i = 0; i < data.length; i++) {
+                data[i][key] = null;
+            }
+            return;
+        }
+
+        let k = 2 / (period + 1);
+        let sum = 0;
+        for (let i = 0; i < period; i++) {
+            sum += data[i].close;
+        }
+        let ema = sum / period;
+        data[period - 1][key] = ema;
+
+        for (let i = period - 2; i >= 0; i--) {
+            data[i][key] = null;
+        }
+
+        for (let i = period; i < data.length; i++) {
+            ema = (data[i].close - ema) * k + ema;
+            data[i][key] = ema;
+        }
+    }
+
+    let screenerResults = [];
+    let isScreening = false;
+    let currentFilter = "all";
+
+    function renderScreenerTable() {
+        const tbody = document.getElementById("screener-table-body");
+        if (!tbody) return;
+        
+        let filtered = [...screenerResults];
+        if (currentFilter === "buy") {
+            filtered = filtered.filter(r => r.score >= 2);
+        } else if (currentFilter === "sell") {
+            filtered = filtered.filter(r => r.score <= -2);
+        }
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center text-muted" style="padding: 40px 0;">
+                        Không có dữ liệu phù hợp với bộ lọc hiện tại.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = "";
+        filtered.forEach((res, index) => {
+            const tr = document.createElement("tr");
+            
+            const displayClose = formatMoney(res.close) + " đ";
+            
+            const changeSign = res.changePct > 0 ? "+" : "";
+            const changeClass = res.changePct > 0 ? "text-success" : (res.changePct < 0 ? "text-danger" : "text-muted");
+            const displayChange = `<span class="${changeClass}">${changeSign}${res.changePct.toFixed(2)}%</span>`;
+
+            const scoreClass = res.score >= 6 ? "text-success font-bold" : (res.score >= 2 ? "text-success" : (res.score <= -6 ? "text-danger font-bold" : (res.score <= -2 ? "text-danger" : "text-muted")));
+            const displayScore = `<span class="${scoreClass}">${res.score >= 0 ? '+' : ''}${res.score}</span>`;
+
+            let emaTrendHtml = "";
+            if (res.ema50Slope > 0) {
+                emaTrendHtml = `<span class="text-success"><i class="fa-solid fa-arrow-trend-up"></i> Tăng dài hạn</span>`;
+            } else if (res.ema50Slope < 0) {
+                emaTrendHtml = `<span class="text-danger"><i class="fa-solid fa-arrow-trend-down"></i> Giảm dài hạn</span>`;
+            } else {
+                emaTrendHtml = `<span class="text-muted"><i class="fa-solid fa-right-left"></i> Đi ngang</span>`;
+            }
+
+            let actionBadgeClass = "screener-badge neutral";
+            if (res.signalText === "MUA MẠNH" || res.signalText === "MUA") {
+                actionBadgeClass = "screener-badge buy";
+            } else if (res.signalText === "BÁN MẠNH" || res.signalText === "BÁN") {
+                actionBadgeClass = "screener-badge sell";
+            }
+            const displayAction = `<span class="${actionBadgeClass}">${res.signalText}</span>`;
+
+            tr.innerHTML = `
+                <td style="text-align: center; font-weight: bold;">${index + 1}</td>
+                <td style="font-weight: bold; color: var(--accent);">${res.ticker}</td>
+                <td>${displayClose}</td>
+                <td>${displayChange}</td>
+                <td style="text-align: center; font-weight: bold;">${displayScore}</td>
+                <td>${emaTrendHtml}</td>
+                <td style="font-size: 13px;">${res.setupTitle}</td>
+                <td>${displayAction}</td>
+                <td style="text-align: center;">
+                    <button class="btn-view-chart" data-ticker="${res.ticker}">
+                        <i class="fa-solid fa-chart-line"></i> Xem
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function startMarketScreener() {
+        if (isScreening) return;
+        isScreening = true;
+
+        screenerResults = [];
+        const btnStart = document.getElementById("btn-start-screener");
+        const progressContainer = document.getElementById("screener-progress-container");
+        const progressStatus = document.getElementById("screener-progress-status");
+        const progressPercent = document.getElementById("screener-progress-percent");
+        const progressBar = document.getElementById("screener-progress-bar");
+        const statsContainer = document.getElementById("screener-stats");
+        const tableBody = document.getElementById("screener-table-body");
+
+        btnStart.disabled = true;
+        btnStart.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang rà soát...`;
+        
+        progressContainer.classList.remove("hidden");
+        statsContainer.classList.remove("hidden");
+        progressBar.style.width = "0%";
+        progressPercent.textContent = "0%";
+        progressStatus.textContent = "Bắt đầu khởi tạo phiên quét...";
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center text-muted" style="padding: 40px 0;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px; display: block; color: var(--accent);"></i>
+                    Hệ thống đang rà soát các mã cổ phiếu và tính toán tín hiệu dòng tiền...
+                </td>
+            </tr>
+        `;
+
+        let scannedCount = 0;
+        let strongBuyCount = 0;
+        let buyCount = 0;
+        let sellCount = 0;
+
+        const totalTickers = SCREENER_TICKERS.length;
+        const toTimestamp = Math.floor(Date.now() / 1000);
+        const fromTimestamp = toTimestamp - 94608000;
+
+        for (let i = 0; i < totalTickers; i++) {
+            const ticker = SCREENER_TICKERS[i];
+            
+            const percent = Math.round(((i + 1) / totalTickers) * 100);
+            progressStatus.textContent = `Đang quét dữ liệu của ${ticker} (${i + 1}/${totalTickers})...`;
+            progressPercent.textContent = `${percent}%`;
+            progressBar.style.width = `${percent}%`;
+
+            const url = `https://dchart-api.vndirect.com.vn/dchart/history?symbol=${ticker}&resolution=D&from=${fromTimestamp}&to=${toTimestamp}`;
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("API Connection Failed");
+                const json = await response.json();
+                
+                const dataRows = parseVndirectData(ticker, json);
+                if (dataRows && dataRows.length >= 20) {
+                    const computedData = calculateScreenerIndicators(dataRows);
+                    const analysis = analyzeSingleTickerData(ticker, computedData);
+                    
+                    screenerResults.push(analysis);
+
+                    if (analysis.score >= 6) {
+                        strongBuyCount++;
+                    } else if (analysis.score >= 2) {
+                        buyCount++;
+                    } else if (analysis.score <= -2) {
+                        sellCount++;
+                    }
+                    
+                    scannedCount++;
+                    
+                    document.getElementById("stat-scanned-count").textContent = `${scannedCount} / ${totalTickers}`;
+                    document.getElementById("stat-strong-buy-count").textContent = strongBuyCount;
+                    document.getElementById("stat-buy-count").textContent = buyCount;
+                    document.getElementById("stat-sell-count").textContent = sellCount;
+
+                    screenerResults.sort((a, b) => b.score - a.score);
+                    renderScreenerTable();
+                }
+            } catch (err) {
+                console.warn(`Lỗi rà soát mã ${ticker}:`, err.message);
+            }
+
+            await sleep(150);
+        }
+
+        isScreening = false;
+        btnStart.disabled = false;
+        btnStart.innerHTML = `<i class="fa-solid fa-play"></i> Bắt đầu rà soát thị trường`;
+        progressStatus.textContent = `Đã hoàn thành rà soát toàn bộ ${totalTickers} mã cổ phiếu thị trường!`;
+    }
+
+    const btnStartScreener = document.getElementById("btn-start-screener");
+    if (btnStartScreener) {
+        btnStartScreener.addEventListener("click", () => {
+            startMarketScreener();
+        });
+    }
+
+    const filterBtns = document.querySelectorAll(".screener-filters .filter-btn");
+    filterBtns.forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            filterBtns.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            currentFilter = btn.getAttribute("data-filter");
+            renderScreenerTable();
+        });
+    });
+
+    document.addEventListener("click", function(e) {
+        if (e.target && (e.target.classList.contains("btn-view-chart") || e.target.closest(".btn-view-chart"))) {
+            const button = e.target.classList.contains("btn-view-chart") ? e.target : e.target.closest(".btn-view-chart");
+            if (button.closest("#screener-table")) {
+                const ticker = button.getAttribute("data-ticker");
+                if (ticker) {
+                    const btnDashboard = document.getElementById("btn-dashboard");
+                    if (btnDashboard) {
+                        btnDashboard.click();
+                    }
+                    
+                    const input = document.getElementById("ticker-input");
+                    if (input) input.value = ticker;
+                    
+                    currentTicker = ticker;
+                    loadData();
+                }
+            }
+        }
+    });
 });
