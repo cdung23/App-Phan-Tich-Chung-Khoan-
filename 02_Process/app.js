@@ -1904,7 +1904,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 link.download = `[HongKinhTe]_${ticker}_${dateStr}_1x1_4K.png`;
                 link.href = canvas.toDataURL("image/png");
+                
+                // Đính kèm link vào DOM để trình duyệt không chặn tải xuống bất đồng bộ
+                link.style.display = "none";
+                document.body.appendChild(link);
                 link.click();
+                document.body.removeChild(link);
 
                 // Khôi phục trạng thái nút bấm
                 btnDownloadTiktok4k.disabled = false;
