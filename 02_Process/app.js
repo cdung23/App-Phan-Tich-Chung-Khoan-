@@ -253,7 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
         calculateMACD();
 
         // Update logo and header labels
-        if (logoBrand) logoBrand.textContent = currentTicker;
+        // if (logoBrand) logoBrand.textContent = currentTicker;
         const pageTitle = document.getElementById("page-title");
         if (pageTitle) pageTitle.textContent = `Trực quan hóa & Phân tích Kỹ thuật - Mã ${currentTicker}`;
         const tickerElements = document.querySelectorAll(".ticker");
@@ -381,7 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
         calculateMACD();
 
         // Update logo and header labels
-        if (logoBrand) logoBrand.textContent = currentTicker;
+        // if (logoBrand) logoBrand.textContent = currentTicker;
         const pageTitle = document.getElementById("page-title");
         if (pageTitle) pageTitle.textContent = `Trực quan hóa & Phân tích Kỹ thuật - Mã ${currentTicker}`;
         const tickerElements = document.querySelectorAll(".ticker");
