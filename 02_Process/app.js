@@ -14,13 +14,44 @@ window.addEventListener('error', function(event) {
         errDiv.style.right = '20px';
         errDiv.style.zIndex = '99999';
         errDiv.style.borderRadius = '8px';
-        errDiv.style.maxWidth = '400px';
+        errDiv.style.maxWidth = '420px';
         errDiv.style.fontFamily = 'monospace';
         errDiv.style.fontSize = '12px';
         errDiv.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)';
+        errDiv.style.lineHeight = '1.5';
         document.body.appendChild(errDiv);
     }
-    errDiv.innerHTML = `<strong>JS Error:</strong> ${event.message}<br><span style="color:#6b7280; font-size:10px;">${event.filename}:${event.lineno}</span>`;
+    let msg = event.message;
+    if (msg === "Script error.") {
+        msg = "Script error. (Lỗi CORS từ CDN Firebase. Vui lòng nhấn F12 -> chọn tab Console để xem lỗi thực tế, hoặc kiểm tra lại Rules/Database URL của bạn!)";
+    }
+    errDiv.innerHTML = `<strong>JS Error:</strong> ${msg}<br><span style="color:#6b7280; font-size:10px;">${event.filename || 'unknown'}:${event.lineno || 0}</span>`;
+});
+
+// Bắt lỗi Unhandled Promise Rejections
+window.addEventListener('unhandledrejection', function(event) {
+    let errDiv = document.getElementById('debug-error-overlay');
+    if (!errDiv) {
+        errDiv = document.createElement('div');
+        errDiv.id = 'debug-error-overlay';
+        errDiv.style.background = '#fef2f2';
+        errDiv.style.color = '#991b1b';
+        errDiv.style.border = '1px solid #fca5a5';
+        errDiv.style.padding = '15px';
+        errDiv.style.position = 'fixed';
+        errDiv.style.bottom = '20px';
+        errDiv.style.right = '20px';
+        errDiv.style.zIndex = '99999';
+        errDiv.style.borderRadius = '8px';
+        errDiv.style.maxWidth = '420px';
+        errDiv.style.fontFamily = 'monospace';
+        errDiv.style.fontSize = '12px';
+        errDiv.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)';
+        errDiv.style.lineHeight = '1.5';
+        document.body.appendChild(errDiv);
+    }
+    const reason = event.reason ? (event.reason.message || event.reason) : 'Unknown Promise Rejection';
+    errDiv.innerHTML = `<strong>Unhandled Promise Rejection:</strong> ${reason}`;
 });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -2492,69 +2523,76 @@ document.addEventListener("DOMContentLoaded", () => {
             btnSyncFb.disabled = true;
             btnSyncFb.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đồng bộ...';
             
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const todayDateStr = `${yyyy}-${mm}-${dd}`;
-            const dateKey = `${yyyy}${mm}${dd}`;
-            
-            const promises = screenerResults.map(item => {
-                let targetVal = null;
-                if (item.target && item.target !== '--') {
-                    const cleaned = item.target.replace(/[^0-9.-]+/g, "");
-                    if (cleaned !== "") {
-                        const parsed = parseFloat(cleaned);
-                        if (!isNaN(parsed)) {
-                            targetVal = parsed;
+            try {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const todayDateStr = `${yyyy}-${mm}-${dd}`;
+                const dateKey = `${yyyy}${mm}${dd}`;
+                
+                const promises = screenerResults.map(item => {
+                    let targetVal = null;
+                    if (item.target && item.target !== '--') {
+                        const cleaned = item.target.replace(/[^0-9.-]+/g, "");
+                        if (cleaned !== "") {
+                            const parsed = parseFloat(cleaned);
+                            if (!isNaN(parsed)) {
+                                targetVal = parsed;
+                            }
                         }
                     }
-                }
-                
-                let stopLossVal = null;
-                if (item.stopLoss && item.stopLoss !== '--') {
-                    const cleaned = item.stopLoss.replace(/[^0-9.-]+/g, "");
-                    if (cleaned !== "") {
-                        const parsed = parseFloat(cleaned);
-                        if (!isNaN(parsed)) {
-                            stopLossVal = parsed;
+                    
+                    let stopLossVal = null;
+                    if (item.stopLoss && item.stopLoss !== '--') {
+                        const cleaned = item.stopLoss.replace(/[^0-9.-]+/g, "");
+                        if (cleaned !== "") {
+                            const parsed = parseFloat(cleaned);
+                            if (!isNaN(parsed)) {
+                                stopLossVal = parsed;
+                            }
                         }
                     }
-                }
-                
-                let predictPriceVal = parseFloat(item.close);
-                if (isNaN(predictPriceVal)) predictPriceVal = 0;
-                
-                let predictScoreVal = parseFloat(item.score);
-                if (isNaN(predictScoreVal)) predictScoreVal = 0;
-                
-                const key = `${item.ticker}_${dateKey}`;
-                return firebaseDatabase.ref('predictions_evaluation/' + key).set({
-                    ticker: item.ticker,
-                    predictDate: todayDateStr,
-                    predictPrice: predictPriceVal,
-                    predictScore: predictScoreVal,
-                    predictAction: item.actionText || "TẠM THỜI QUAN SÁT",
-                    targetPrice: targetVal,
-                    stopLossPrice: stopLossVal,
-                    actualPriceT5: null,
-                    priceDiffT5: null,
-                    statusT5: "WAITING"
+                    
+                    let predictPriceVal = parseFloat(item.close);
+                    if (isNaN(predictPriceVal)) predictPriceVal = 0;
+                    
+                    let predictScoreVal = parseFloat(item.score);
+                    if (isNaN(predictScoreVal)) predictScoreVal = 0;
+                    
+                    const key = `${item.ticker}_${dateKey}`;
+                    return firebaseDatabase.ref('predictions_evaluation/' + key).set({
+                        ticker: item.ticker,
+                        predictDate: todayDateStr,
+                        predictPrice: predictPriceVal,
+                        predictScore: predictScoreVal,
+                        predictAction: item.actionText || "TẠM THỜI QUAN SÁT",
+                        targetPrice: targetVal,
+                        stopLossPrice: stopLossVal,
+                        actualPriceT5: null,
+                        priceDiffT5: null,
+                        statusT5: "WAITING"
+                    });
                 });
-            });
-            
-            Promise.all(promises).then(() => {
-                alert("Đồng bộ dữ liệu dự báo lên Firebase thành công!");
+                
+                Promise.all(promises).then(() => {
+                    alert("Đồng bộ dữ liệu dự báo lên Firebase thành công!");
+                    btnSyncFb.disabled = false;
+                    btnSyncFb.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Đồng bộ lên Firebase';
+                    btnSyncFb.classList.add("hidden");
+                    loadFirebasePerformanceData();
+                }).catch(err => {
+                    console.error("Lỗi đồng bộ Firebase:", err);
+                    alert("Đồng bộ thất bại: " + err.message);
+                    btnSyncFb.disabled = false;
+                    btnSyncFb.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Đồng bộ lên Firebase';
+                });
+            } catch (globalErr) {
+                console.error("Lỗi đồng bộ Firebase (đồng bộ):", globalErr);
+                alert("Lỗi đồng bộ: " + globalErr.message);
                 btnSyncFb.disabled = false;
                 btnSyncFb.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Đồng bộ lên Firebase';
-                btnSyncFb.classList.add("hidden");
-                loadFirebasePerformanceData();
-            }).catch(err => {
-                console.error("Lỗi đồng bộ Firebase:", err);
-                alert("Đồng bộ thất bại: " + err.message);
-                btnSyncFb.disabled = false;
-                btnSyncFb.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Đồng bộ lên Firebase';
-            });
+            }
         });
     }
 
