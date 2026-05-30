@@ -156,10 +156,94 @@
                                 <button class="chart-btn active" data-days="all">Tất cả</button>
                                 <button class="chart-btn" data-days="90">90 Ngày</button>
                                 <button class="chart-btn" data-days="30">30 Ngày</button>
+                                <button id="btn-intraday-deep" class="chart-btn btn-intraday-deep" style="background-color: var(--primary-color); border: none; border-radius: 4px; padding: 4px 10px; color: white; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px; font-family: inherit; font-size: 11px; margin-left: 10px; transition: all 0.2s;"><i class="fa-solid fa-bolt"></i> Phân tích Intraday</button>
                             </div>
                         </div>
                         <div class="card-body">
                             <div id="chart-container" class="chart-container"></div>
+                            
+                            <!-- Intraday Analysis Panel (Hidden by default) -->
+                            <div id="intraday-panel" class="intraday-panel hidden">
+                                <div class="intraday-panel-header">
+                                    <h3 class="intraday-panel-title"><i class="fa-solid fa-chart-line"></i> Phân Tích Giao Dịch Trong Phiên (Intraday)</h3>
+                                    <button id="btn-close-intraday" class="btn-close-intraday"><i class="fa-solid fa-xmark"></i></button>
+                                </div>
+                                
+                                <div class="intraday-panel-body">
+                                    <!-- Row 1: Quick stats & Alerts -->
+                                    <div class="intraday-row">
+                                        <!-- Money Flow (Active Buy/Sell) -->
+                                        <div class="intraday-col money-flow-col">
+                                            <div class="intraday-sub-title">Lực Mua / Bán Chủ Động (Tỷ lệ %)</div>
+                                            <div class="money-flow-bar-container">
+                                                <div class="money-flow-bar">
+                                                    <div id="intraday-buy-bar" class="money-flow-fill buy" style="width: 50%"></div>
+                                                    <div id="intraday-sell-bar" class="money-flow-fill sell" style="width: 50%"></div>
+                                                </div>
+                                                <div class="money-flow-labels">
+                                                    <span class="buy-label">Mua: <span id="intraday-buy-pct">50%</span></span>
+                                                    <span class="sell-label">Bán: <span id="intraday-sell-pct">50%</span></span>
+                                                </div>
+                                            </div>
+                                            <div class="money-flow-details">
+                                                <div>Tổng mua chủ động: <span id="intraday-buy-vol" class="text-success">0</span> cp</div>
+                                                <div>Tổng bán chủ động: <span id="intraday-sell-vol" class="text-danger">0</span> cp</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Live Intraday Alerts -->
+                                        <div class="intraday-col alerts-col">
+                                            <div class="intraday-sub-title">Nhật Ký Cảnh Báo Trong Phiên</div>
+                                            <div id="intraday-alerts-log" class="intraday-alerts-log">
+                                                <div class="alert-placeholder">Chưa có cảnh báo nào trong ngày hôm nay...</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Row 2: Smart Money Tracker -->
+                                    <div class="intraday-row">
+                                        <div class="intraday-col full-width">
+                                            <div class="intraday-sub-title"><i class="fa-solid fa-fish-fins"></i> Dấu Chân Cá Mập (Lệnh Lớn Đột Biến 1 Phút)</div>
+                                            <div class="shark-tracker-summary">
+                                                <div class="shark-stat-card">
+                                                    <span class="label">Cá mập gom ròng:</span>
+                                                    <span id="shark-net-volume" class="value" style="font-weight: 700; color: #10b981;">0 cp</span>
+                                                </div>
+                                                <div class="shark-stat-card">
+                                                    <span class="label">Lực mua cá mập:</span>
+                                                    <span id="shark-buy-ratio" class="value" style="font-weight: 700; color: #3b82f6;">50%</span>
+                                                </div>
+                                            </div>
+                                            <div class="shark-trades-list-container">
+                                                <table class="shark-trades-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Thời gian</th>
+                                                            <th>Giá khớp</th>
+                                                            <th>Khối lượng</th>
+                                                            <th>Tỷ lệ so với TB</th>
+                                                            <th>Hành động cá mập</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="shark-trades-tbody">
+                                                        <tr>
+                                                            <td colspan="5" class="text-center text-muted">Không phát hiện lệnh lớn đột biến nào trong phiên...</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Row 3: Mini chart and VWAP -->
+                                    <div class="intraday-row">
+                                        <div class="intraday-col full-width">
+                                            <div class="intraday-sub-title">Biểu đồ nến 1 Phút & Đường VWAP (Giá trung bình phiên)</div>
+                                            <div id="intraday-chart-container" class="intraday-chart-container"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

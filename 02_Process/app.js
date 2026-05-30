@@ -2801,6 +2801,354 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // --- PHÂN TÍCH GIAO DỊCH TRONG PHIÊN (INTRADAY ON-DEMAND) ---
+
+    async function fetchIntradayData(ticker) {
+        const now = Math.floor(Date.now() / 1000);
+        // Lấy dữ liệu 3 ngày gần nhất để đảm bảo luôn có dữ liệu của ngày thứ Sáu nếu là cuối tuần
+        const from = now - 3 * 24 * 60 * 60;
+        const url = `https://dchart-api.vndirect.com.vn/dchart/history?symbol=${ticker}&resolution=1&from=${from}&to=${now}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Không thể kết nối đến máy chủ dữ liệu VNDirect");
+        const json = await response.json();
+        if (json.s !== "ok" || !json.t || json.t.length === 0) {
+            throw new Error("Không tìm thấy dữ liệu giao dịch trong phiên cho mã này");
+        }
+        
+        const dataRows = [];
+        for (let i = 0; i < json.t.length; i++) {
+            dataRows.push({
+                time: json.t[i],
+                open: json.o[i],
+                high: json.h[i],
+                low: json.l[i],
+                close: json.c[i],
+                volume: json.v[i]
+            });
+        }
+        
+        // Chỉ lấy nến của ngày giao dịch gần nhất
+        const latestTimestamp = dataRows[dataRows.length - 1].time;
+        const latestDate = new Date(latestTimestamp * 1000).toDateString();
+        
+        const filteredData = dataRows.filter(row => {
+            return new Date(row.time * 1000).toDateString() === latestDate;
+        });
+        
+        return filteredData;
+    }
+
+    function analyzeIntradayFlow(data) {
+        let totalBuyVol = 0;
+        let totalSellVol = 0;
+        
+        data.forEach(row => {
+            const high = row.high;
+            const low = row.low;
+            const close = row.close;
+            const volume = row.volume;
+            
+            if (high === low) {
+                totalBuyVol += volume / 2;
+                totalSellVol += volume / 2;
+            } else {
+                // Tỷ lệ CLV (Chaikin Money Flow Volume) = ((Close - Low) - (High - Close)) / (High - Low)
+                const clv = ((close - low) - (high - close)) / (high - low);
+                const clvPct = (clv + 1) / 2; // Chuyển sang khoảng [0, 1]
+                
+                const buyVol = volume * clvPct;
+                const sellVol = volume * (1 - clvPct);
+                
+                totalBuyVol += buyVol;
+                totalSellVol += sellVol;
+            }
+        });
+        
+        const totalVol = totalBuyVol + totalSellVol;
+        const buyPct = totalVol > 0 ? Math.round((totalBuyVol / totalVol) * 100) : 50;
+        const sellPct = totalVol > 0 ? 100 - buyPct : 50;
+        
+        return {
+            totalBuyVol: Math.round(totalBuyVol),
+            totalSellVol: Math.round(totalSellVol),
+            buyPct: buyPct,
+            sellPct: sellPct
+        };
+    }
+
+    function detectSharkActivity(data) {
+        const sharkTrades = [];
+        let sharkBuyVol = 0;
+        let sharkSellVol = 0;
+        
+        for (let i = 20; i < data.length; i++) {
+            const current = data[i];
+            let prevSum = 0;
+            for (let j = 1; j <= 20; j++) {
+                prevSum += data[i - j].volume;
+            }
+            const avpm = prevSum / 20;
+            
+            // Lọc nến volume đột biến gấp 3 lần trung bình và lớn hơn 50.000 cp
+            if (current.volume > avpm * 3 && current.volume > 50000) {
+                const date = new Date(current.time * 1000);
+                const timeStr = String(date.getHours()).padStart(2, '0') + ":" + String(date.getMinutes()).padStart(2, '0');
+                const isBuy = current.close >= current.open;
+                const ratio = (current.volume / avpm).toFixed(1);
+                
+                if (isBuy) {
+                    sharkBuyVol += current.volume;
+                } else {
+                    sharkSellVol += current.volume;
+                }
+                
+                sharkTrades.push({
+                    time: timeStr,
+                    price: current.close,
+                    volume: current.volume,
+                    ratio: ratio,
+                    action: isBuy ? "GOM HÀNG" : "XẢ HÀNG",
+                    isBuy: isBuy
+                });
+            }
+        }
+        
+        sharkTrades.sort((a, b) => b.time.localeCompare(a.time));
+        
+        const netVol = sharkBuyVol - sharkSellVol;
+        const totalSharkVol = sharkBuyVol + sharkSellVol;
+        const buyRatio = totalSharkVol > 0 ? Math.round((sharkBuyVol / totalSharkVol) * 100) : 50;
+        
+        return {
+            trades: sharkTrades,
+            netVolume: netVol,
+            buyRatio: buyRatio
+        };
+    }
+
+    function generateIntradayAlerts(data) {
+        const alerts = [];
+        if (data.length < 5) return alerts;
+        
+        let maxSoFar = data[0].high;
+        let minSoFar = data[0].low;
+        
+        for (let i = 1; i < data.length; i++) {
+            const current = data[i];
+            const date = new Date(current.time * 1000);
+            const timeStr = String(date.getHours()).padStart(2, '0') + ":" + String(date.getMinutes()).padStart(2, '0');
+            
+            if (current.close > maxSoFar && i > 15) {
+                alerts.push({
+                    time: timeStr,
+                    type: "success",
+                    message: `Phá vỡ đỉnh ngày (Breakout High): Giá vượt đỉnh cũ ${formatMoney(maxSoFar)}đ vọt lên ${formatMoney(current.close)}đ.`
+                });
+                maxSoFar = current.high;
+            }
+            
+            if (current.close < minSoFar && i > 15) {
+                alerts.push({
+                    time: timeStr,
+                    type: "danger",
+                    message: `Thủng đáy ngày (Breakdown Low): Giá rơi qua hỗ trợ đáy ${formatMoney(minSoFar)}đ xuống ${formatMoney(current.close)}đ.`
+                });
+                minSoFar = current.low;
+            }
+            
+            if (current.high > maxSoFar) maxSoFar = current.high;
+            if (current.low < minSoFar) minSoFar = current.low;
+            
+            if (i === data.length - 1) {
+                const body = Math.abs(current.close - current.open);
+                const range = current.high - current.low;
+                const lowerShadow = Math.min(current.close, current.open) - current.low;
+                const upperShadow = current.high - Math.max(current.close, current.open);
+                
+                if (lowerShadow > body * 2 && upperShadow < body && range > 0) {
+                    alerts.push({
+                        time: timeStr,
+                        type: "info",
+                        message: `Nến rút chân đảo chiều (Hammer): Lực cầu nâng đỡ giá mạnh vùng thấp ${formatMoney(current.low)}đ.`
+                    });
+                }
+            }
+        }
+        
+        alerts.sort((a, b) => b.time.localeCompare(a.time));
+        return alerts.slice(0, 5);
+    }
+
+    let intradayChart = null;
+    let candleSeries1m = null;
+    let vwapLineSeries = null;
+
+    function renderIntradayChart(data) {
+        const container = document.getElementById("intraday-chart-container");
+        if (!container) return;
+        
+        if (intradayChart) {
+            intradayChart.remove();
+            intradayChart = null;
+        }
+        
+        intradayChart = LightweightCharts.createChart(container, {
+            layout: {
+                background: { type: 'solid', color: 'rgba(17, 24, 39, 0)' },
+                textColor: '#d1d5db',
+            },
+            grid: {
+                vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
+                horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+            },
+            timeScale: {
+                timeVisible: true,
+                secondsVisible: false,
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+            },
+        });
+        
+        candleSeries1m = intradayChart.addCandlestickSeries({
+            upColor: '#10b981',
+            downColor: '#ef4444',
+            borderUpColor: '#10b981',
+            borderDownColor: '#ef4444',
+            wickUpColor: '#10b981',
+            wickDownColor: '#ef4444',
+        });
+        
+        vwapLineSeries = intradayChart.addLineSeries({
+            color: '#f59e0b',
+            lineWidth: 2,
+            title: 'Đường VWAP',
+        });
+        
+        const candleData = [];
+        const vwapData = [];
+        
+        let sumTypicalPriceVol = 0;
+        let sumVol = 0;
+        
+        data.forEach(row => {
+            const time = row.time;
+            
+            candleData.push({
+                time: time,
+                open: row.open,
+                high: row.high,
+                low: row.low,
+                close: row.close
+            });
+            
+            const typicalPrice = (row.high + row.low + row.close) / 3;
+            sumTypicalPriceVol += typicalPrice * row.volume;
+            sumVol += row.volume;
+            
+            const vwapVal = sumVol > 0 ? sumTypicalPriceVol / sumVol : row.close;
+            vwapData.push({
+                time: time,
+                value: parseFloat(vwapVal.toFixed(2))
+            });
+        });
+        
+        candleSeries1m.setData(candleData);
+        vwapLineSeries.setData(vwapData);
+        
+        intradayChart.timeScale().fitContent();
+    }
+
+    const btnIntradayDeep = document.getElementById("btn-intraday-deep");
+    const intradayPanel = document.getElementById("intraday-panel");
+    const btnCloseIntraday = document.getElementById("btn-close-intraday");
+    
+    if (btnIntradayDeep && intradayPanel) {
+        btnIntradayDeep.addEventListener("click", async () => {
+            if (intradayPanel.classList.contains("hidden")) {
+                intradayPanel.classList.remove("hidden");
+                intradayPanel.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            btnIntradayDeep.disabled = true;
+            btnIntradayDeep.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích...';
+            
+            try {
+                const ticker = currentTicker || "VIX";
+                const data = await fetchIntradayData(ticker);
+                
+                const flow = analyzeIntradayFlow(data);
+                document.getElementById("intraday-buy-bar").style.width = `${flow.buyPct}%`;
+                document.getElementById("intraday-sell-bar").style.width = `${flow.sellPct}%`;
+                document.getElementById("intraday-buy-pct").textContent = `${flow.buyPct}%`;
+                document.getElementById("intraday-sell-pct").textContent = `${flow.sellPct}%`;
+                document.getElementById("intraday-buy-vol").textContent = flow.totalBuyVol.toLocaleString("vi-VN");
+                document.getElementById("intraday-sell-vol").textContent = flow.totalSellVol.toLocaleString("vi-VN");
+                
+                const alertsLog = document.getElementById("intraday-alerts-log");
+                const alerts = generateIntradayAlerts(data);
+                if (alertsLog) {
+                    if (alerts.length === 0) {
+                        alertsLog.innerHTML = '<div class="alert-placeholder">Chưa phát hiện tín hiệu bất thường trong ngày hôm nay...</div>';
+                    } else {
+                        let htmlStr = "";
+                        alerts.forEach(item => {
+                            htmlStr += `<div class="intraday-alert-item ${item.type}">
+                                <span>${item.message}</span>
+                                <span class="time">${item.time}</span>
+                            </div>`;
+                        });
+                        alertsLog.innerHTML = htmlStr;
+                    }
+                }
+                
+                const shark = detectSharkActivity(data);
+                document.getElementById("shark-net-volume").textContent = `${shark.netVolume >= 0 ? '+' : ''}${shark.netVolume.toLocaleString("vi-VN")} cp`;
+                document.getElementById("shark-net-volume").style.color = shark.netVolume >= 0 ? '#10b981' : '#ef4444';
+                document.getElementById("shark-buy-ratio").textContent = `${shark.buyRatio}%`;
+                document.getElementById("shark-buy-ratio").style.color = shark.buyRatio >= 50 ? '#10b981' : '#ef4444';
+                
+                const sharkTbody = document.getElementById("shark-trades-tbody");
+                if (sharkTbody) {
+                    if (shark.trades.length === 0) {
+                        sharkTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Không phát hiện lệnh lớn đột biến nào trong phiên...</td></tr>';
+                    } else {
+                        let htmlStr = "";
+                        shark.trades.slice(0, 10).forEach(trade => {
+                            const actionColor = trade.isBuy ? '#10b981' : '#ef4444';
+                            htmlStr += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                <td style="padding: 8px 12px; color: var(--text-secondary);">${trade.time}</td>
+                                <td style="padding: 8px 12px; font-weight: bold; color: var(--text-primary);">${formatMoney(trade.price)} đ</td>
+                                <td style="padding: 8px 12px; color: var(--text-secondary);">${trade.volume.toLocaleString("vi-VN")}</td>
+                                <td style="padding: 8px 12px; color: #f59e0b; font-weight: 600;">gấp ${trade.ratio} lần</td>
+                                <td style="padding: 8px 12px; font-weight: 700; color: ${actionColor};">${trade.action}</td>
+                            </tr>`;
+                        });
+                        sharkTbody.innerHTML = htmlStr;
+                    }
+                }
+                
+                renderIntradayChart(data);
+                
+            } catch (err) {
+                console.error("Lỗi phân tích chuyên sâu Intraday:", err);
+                alert("Không thể phân tích trong phiên: " + err.message);
+            } finally {
+                btnIntradayDeep.disabled = false;
+                btnIntradayDeep.innerHTML = '<i class="fa-solid fa-bolt"></i> Phân tích Intraday';
+            }
+        });
+    }
+    
+    if (btnCloseIntraday && intradayPanel) {
+        btnCloseIntraday.addEventListener("click", () => {
+            intradayPanel.classList.add("hidden");
+            const chartContainer = document.getElementById("chart-container");
+            if (chartContainer) chartContainer.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
     // Khởi tạo Firebase
     initFirebase();
 });
