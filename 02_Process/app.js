@@ -2980,85 +2980,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return alerts.slice(0, 5);
     }
 
-    let intradayChart = null;
-    let candleSeries1m = null;
-    let vwapLineSeries = null;
 
-    function renderIntradayChart(data) {
-        const container = document.getElementById("intraday-chart-container");
-        if (!container) return;
-        
-        if (intradayChart) {
-            intradayChart.remove();
-            intradayChart = null;
-        }
-        
-        intradayChart = LightweightCharts.createChart(container, {
-            layout: {
-                background: { type: 'solid', color: 'rgba(17, 24, 39, 0)' },
-                textColor: '#d1d5db',
-            },
-            grid: {
-                vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
-                horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
-            },
-            timeScale: {
-                timeVisible: true,
-                secondsVisible: false,
-            },
-            crosshair: {
-                mode: LightweightCharts.CrosshairMode.Normal,
-            },
-        });
-        
-        candleSeries1m = intradayChart.addCandlestickSeries({
-            upColor: '#10b981',
-            downColor: '#ef4444',
-            borderUpColor: '#10b981',
-            borderDownColor: '#ef4444',
-            wickUpColor: '#10b981',
-            wickDownColor: '#ef4444',
-        });
-        
-        vwapLineSeries = intradayChart.addLineSeries({
-            color: '#f59e0b',
-            lineWidth: 2,
-            title: 'Đường VWAP',
-        });
-        
-        const candleData = [];
-        const vwapData = [];
-        
-        let sumTypicalPriceVol = 0;
-        let sumVol = 0;
-        
-        data.forEach(row => {
-            const time = row.time;
-            
-            candleData.push({
-                time: time,
-                open: row.open,
-                high: row.high,
-                low: row.low,
-                close: row.close
-            });
-            
-            const typicalPrice = (row.high + row.low + row.close) / 3;
-            sumTypicalPriceVol += typicalPrice * row.volume;
-            sumVol += row.volume;
-            
-            const vwapVal = sumVol > 0 ? sumTypicalPriceVol / sumVol : row.close;
-            vwapData.push({
-                time: time,
-                value: parseFloat(vwapVal.toFixed(2))
-            });
-        });
-        
-        candleSeries1m.setData(candleData);
-        vwapLineSeries.setData(vwapData);
-        
-        intradayChart.timeScale().fitContent();
-    }
 
     const btnIntradayDeep = document.getElementById("btn-intraday-deep");
     const intradayPanel = document.getElementById("intraday-panel");
@@ -3128,9 +3050,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         sharkTbody.innerHTML = htmlStr;
                     }
                 }
-                
-                renderIntradayChart(data);
-                
+
             } catch (err) {
                 console.error("Lỗi phân tích chuyên sâu Intraday:", err);
                 alert("Không thể phân tích trong phiên: " + err.message);
