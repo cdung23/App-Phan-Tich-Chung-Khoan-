@@ -796,7 +796,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // KPI 2: Volume
         kpiVolume.textContent = formatVolume(latest.volume);
-        kpiVolume.nextElementSibling.textContent = `Giá trị khớp: ${formatVolume(latest.value)} VNĐ`;
+        const valueInBillion = latest.value / 1000000000;
+        kpiVolume.nextElementSibling.textContent = `Giá trị khớp: ${valueInBillion.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} tỷ VNĐ`;
 
         // KPI 3: RSI
         if (latest.rsi14) {
