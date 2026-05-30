@@ -1846,8 +1846,8 @@ document.addEventListener("DOMContentLoaded", () => {
             exportChartImg.src = "";
             exportChartImg.alt = "Đang kết xuất biểu đồ...";
 
-            // Lưu lại phạm vi hiển thị logic đang zoom của người dùng
-            const visibleLogicalRange = chartInstance.timeScale().getVisibleLogicalRange();
+            // Lưu lại phạm vi thời gian thực tế đang hiển thị (khoảng zoom) của người dùng
+            const visibleRange = chartInstance.timeScale().getVisibleRange();
 
             // Tạm thời thay đổi kích thước container để Lightweight Charts vẽ lại biểu đồ đúng chuẩn 980x320px
             const originalWidth = chartContainer.style.width;
@@ -1856,48 +1856,54 @@ document.addEventListener("DOMContentLoaded", () => {
             chartContainer.style.width = "980px";
             chartContainer.style.height = "320px";
             chartInstance.resize(980, 320);
-            
-            // Khôi phục lại đúng khoảng zoom cho biểu đồ kích thước xuất ảnh
-            if (visibleLogicalRange) {
-                chartInstance.timeScale().setVisibleLogicalRange(visibleLogicalRange);
-            }
 
-            // Đợi 150ms để Lightweight Charts cập nhật layout vẽ biểu đồ
+            // Đợi 150ms để Lightweight Charts cập nhật kích thước mới
             setTimeout(() => {
-                html2canvas(chartContainer, {
-                    useCORS: true,
-                    backgroundColor: '#181d2c',
-                    logging: false
-                }).then(canvas => {
-                    exportChartImg.src = canvas.toDataURL("image/png");
-                    exportChartImg.alt = "Biểu đồ phân tích kỹ thuật";
-                    
-                    // Khôi phục kích thước biểu đồ ban đầu
-                    chartContainer.style.width = originalWidth;
-                    chartContainer.style.height = originalHeight;
-                    resizeChart();
-                    
-                    // Khôi phục lại đúng khoảng zoom ban đầu cho biểu đồ chính
-                    if (visibleLogicalRange) {
-                        chartInstance.timeScale().setVisibleLogicalRange(visibleLogicalRange);
-                    }
+                // Áp dụng lại đúng khoảng thời gian zoom cho biểu đồ kích thước xuất ảnh
+                if (visibleRange) {
+                    chartInstance.timeScale().setVisibleRange(visibleRange);
+                }
 
-                    // Mở modal sau khi biểu đồ được chụp xong
-                    if (tiktokModal) {
-                        tiktokModal.classList.remove("hidden");
-                        document.body.style.overflow = "hidden"; // Khóa cuộn trang chính khi mở modal xem trước
-                    }
-                }).catch(err => {
-                    console.error("Lỗi chụp biểu đồ:", err);
-                    
-                    // Khôi phục kích thước biểu đồ ban đầu
-                    chartContainer.style.width = originalWidth;
-                    chartContainer.style.height = originalHeight;
-                    resizeChart();
-                    chartInstance.timeScale().fitContent();
+                // Chờ thêm 50ms để biểu đồ hoàn tất việc render khoảng thời gian mới trước khi html2canvas chụp hình
+                setTimeout(() => {
+                    html2canvas(chartContainer, {
+                        useCORS: true,
+                        backgroundColor: '#181d2c',
+                        logging: false
+                    }).then(canvas => {
+                        exportChartImg.src = canvas.toDataURL("image/png");
+                        exportChartImg.alt = "Biểu đồ phân tích kỹ thuật";
+                        
+                        // Khôi phục kích thước biểu đồ ban đầu
+                        chartContainer.style.width = originalWidth;
+                        chartContainer.style.height = originalHeight;
+                        resizeChart();
+                        
+                        // Khôi phục lại đúng khoảng zoom ban đầu cho biểu đồ chính
+                        if (visibleRange) {
+                            chartInstance.timeScale().setVisibleRange(visibleRange);
+                        }
 
-                    alert("Không thể chụp ảnh biểu đồ. Vui lòng thử lại!");
-                });
+                        // Mở modal sau khi biểu đồ được chụp xong
+                        if (tiktokModal) {
+                            tiktokModal.classList.remove("hidden");
+                            document.body.style.overflow = "hidden"; // Khóa cuộn trang chính khi mở modal xem trước
+                        }
+                    }).catch(err => {
+                        console.error("Lỗi chụp biểu đồ:", err);
+                        
+                        // Khôi phục kích thước biểu đồ ban đầu
+                        chartContainer.style.width = originalWidth;
+                        chartContainer.style.height = originalHeight;
+                        resizeChart();
+                        
+                        if (visibleRange) {
+                            chartInstance.timeScale().setVisibleRange(visibleRange);
+                        }
+
+                        alert("Không thể chụp ảnh biểu đồ. Vui lòng thử lại!");
+                    });
+                }, 50);
             }, 150);
         }
     }
