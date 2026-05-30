@@ -2844,6 +2844,12 @@ document.addEventListener("DOMContentLoaded", () => {
         let totalSellVol = 0;
         
         data.forEach(row => {
+            const date = new Date(row.time * 1000);
+            const timeStr = String(date.getHours()).padStart(2, '0') + ":" + String(date.getMinutes()).padStart(2, '0');
+            if (timeStr === "09:15" || timeStr === "14:45") {
+                return;
+            }
+
             const high = row.high;
             const low = row.low;
             const close = row.close;
@@ -2894,6 +2900,12 @@ document.addEventListener("DOMContentLoaded", () => {
             if (current.volume > avpm * 5 && current.volume > 150000) {
                 const date = new Date(current.time * 1000);
                 const timeStr = String(date.getHours()).padStart(2, '0') + ":" + String(date.getMinutes()).padStart(2, '0');
+                
+                // Loại bỏ phiên khớp định kỳ mở cửa ATO và đóng cửa ATC tích lũy volume
+                if (timeStr === "09:15" || timeStr === "14:45") {
+                    continue;
+                }
+                
                 const isBuy = current.close >= current.open;
                 const ratio = (current.volume / avpm).toFixed(1);
                 
