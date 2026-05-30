@@ -2890,8 +2890,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             const avpm = prevSum / 20;
             
-            // Lọc nến volume đột biến gấp 3 lần trung bình và lớn hơn 50.000 cp
-            if (current.volume > avpm * 3 && current.volume > 50000) {
+            // Lọc nến volume đột biến gấp 5 lần trung bình và lớn hơn 150.000 cp
+            if (current.volume > avpm * 5 && current.volume > 150000) {
                 const date = new Date(current.time * 1000);
                 const timeStr = String(date.getHours()).padStart(2, '0') + ":" + String(date.getMinutes()).padStart(2, '0');
                 const isBuy = current.close >= current.open;
