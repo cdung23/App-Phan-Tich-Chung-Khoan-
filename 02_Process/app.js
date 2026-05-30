@@ -2844,8 +2844,8 @@ document.addEventListener("DOMContentLoaded", () => {
         let totalSellVol = 0;
         
         data.forEach(row => {
-            const date = new Date(row.time * 1000);
-            const timeStr = String(date.getHours()).padStart(2, '0') + ":" + String(date.getMinutes()).padStart(2, '0');
+            const date = new Date((row.time + 7 * 3600) * 1000);
+            const timeStr = String(date.getUTCHours()).padStart(2, '0') + ":" + String(date.getUTCMinutes()).padStart(2, '0');
             if (timeStr === "09:15" || timeStr === "14:45") {
                 return;
             }
@@ -2898,8 +2898,8 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Lọc nến volume đột biến gấp 5 lần trung bình và lớn hơn 150.000 cp
             if (current.volume > avpm * 5 && current.volume > 150000) {
-                const date = new Date(current.time * 1000);
-                const timeStr = String(date.getHours()).padStart(2, '0') + ":" + String(date.getMinutes()).padStart(2, '0');
+                const date = new Date((current.time + 7 * 3600) * 1000);
+                const timeStr = String(date.getUTCHours()).padStart(2, '0') + ":" + String(date.getUTCMinutes()).padStart(2, '0');
                 
                 // Loại bỏ phiên khớp định kỳ mở cửa ATO và đóng cửa ATC tích lũy volume
                 if (timeStr === "09:15" || timeStr === "14:45") {
@@ -2948,8 +2948,13 @@ document.addEventListener("DOMContentLoaded", () => {
         
         for (let i = 1; i < data.length; i++) {
             const current = data[i];
-            const date = new Date(current.time * 1000);
-            const timeStr = String(date.getHours()).padStart(2, '0') + ":" + String(date.getMinutes()).padStart(2, '0');
+            const date = new Date((current.time + 7 * 3600) * 1000);
+            const timeStr = String(date.getUTCHours()).padStart(2, '0') + ":" + String(date.getUTCMinutes()).padStart(2, '0');
+            
+            // Loại bỏ phiên khớp định kỳ mở cửa ATO và đóng cửa ATC tích lũy volume
+            if (timeStr === "09:15" || timeStr === "14:45") {
+                continue;
+            }
             
             if (current.close > maxSoFar && i > 15) {
                 alerts.push({
