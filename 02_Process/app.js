@@ -1846,6 +1846,9 @@ document.addEventListener("DOMContentLoaded", () => {
             exportChartImg.src = "";
             exportChartImg.alt = "Đang kết xuất biểu đồ...";
 
+            // Lưu lại phạm vi hiển thị logic đang zoom của người dùng
+            const visibleLogicalRange = chartInstance.timeScale().getVisibleLogicalRange();
+
             // Tạm thời thay đổi kích thước container để Lightweight Charts vẽ lại biểu đồ đúng chuẩn 980x320px
             const originalWidth = chartContainer.style.width;
             const originalHeight = chartContainer.style.height;
@@ -1853,7 +1856,11 @@ document.addEventListener("DOMContentLoaded", () => {
             chartContainer.style.width = "980px";
             chartContainer.style.height = "320px";
             chartInstance.resize(980, 320);
-            chartInstance.timeScale().fitContent(); // Tự động kéo giãn các nến vừa khít chiều rộng mới 980px
+            
+            // Khôi phục lại đúng khoảng zoom cho biểu đồ kích thước xuất ảnh
+            if (visibleLogicalRange) {
+                chartInstance.timeScale().setVisibleLogicalRange(visibleLogicalRange);
+            }
 
             // Đợi 150ms để Lightweight Charts cập nhật layout vẽ biểu đồ
             setTimeout(() => {
@@ -1869,7 +1876,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     chartContainer.style.width = originalWidth;
                     chartContainer.style.height = originalHeight;
                     resizeChart();
-                    chartInstance.timeScale().fitContent(); // Căn chỉnh lại biểu đồ chính vừa vặn màn hình
+                    
+                    // Khôi phục lại đúng khoảng zoom ban đầu cho biểu đồ chính
+                    if (visibleLogicalRange) {
+                        chartInstance.timeScale().setVisibleLogicalRange(visibleLogicalRange);
+                    }
 
                     // Mở modal sau khi biểu đồ được chụp xong
                     if (tiktokModal) {
