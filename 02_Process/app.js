@@ -3862,6 +3862,17 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentAnalysisMode = "ta"; // "ta" hoặc "fa"
     let currentFaTab = "overview"; // overview, performance, balance, ratios, valuation
 
+    function createSeededRandom(seed) {
+        let h = 0;
+        for (let i = 0; i < seed.length; i++) {
+            h = Math.imul(31, h) + seed.charCodeAt(i) | 0;
+        }
+        return function() {
+            h = (Math.imul(1103515245, h) + 12345) | 0;
+            return ((h >>> 16) & 32767) / 32768;
+        };
+    }
+
     const fundamentalDataDB = {
         "HPG": {
             overview: {
@@ -3884,12 +3895,16 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             financials: {
                 yearly: [
+                    { period: "2020", revenue: 91275, grossProfit: 19150, netProfit: 13506, totalAssets: 131500, liabilities: 59300, equity: 72200 },
+                    { period: "2021", revenue: 150865, grossProfit: 41250, netProfit: 34520, totalAssets: 178200, liabilities: 84600, equity: 93600 },
                     { period: "2022", revenue: 141409, grossProfit: 12509, netProfit: 8483, totalAssets: 170300, liabilities: 74200, equity: 96100 },
                     { period: "2023", revenue: 118953, grossProfit: 14453, netProfit: 6800, totalAssets: 187700, liabilities: 85300, equity: 102400 },
                     { period: "2024", revenue: 142500, grossProfit: 20400, netProfit: 11950, totalAssets: 208500, liabilities: 95500, equity: 113000 },
                     { period: "2025", revenue: 154800, grossProfit: 24800, netProfit: 13200, totalAssets: 215000, liabilities: 92000, equity: 123000 }
                 ],
                 quarterly: [
+                    { period: "Q4/24", revenue: 35100, grossProfit: 5200, netProfit: 2970, totalAssets: 208500, liabilities: 95500, equity: 113000 },
+                    { period: "Q1/25", revenue: 36200, grossProfit: 5400, netProfit: 3050, totalAssets: 209200, liabilities: 94800, equity: 114400 },
                     { period: "Q2/25", revenue: 38500, grossProfit: 5800, netProfit: 3320, totalAssets: 210000, liabilities: 93000, equity: 117000 },
                     { period: "Q3/25", revenue: 37200, grossProfit: 5500, netProfit: 3050, totalAssets: 212500, liabilities: 93500, equity: 119000 },
                     { period: "Q4/25", revenue: 41100, grossProfit: 6900, netProfit: 3530, totalAssets: 215000, liabilities: 92000, equity: 123000 },
@@ -3927,12 +3942,16 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             financials: {
                 yearly: [
+                    { period: "2020", revenue: 29830, grossProfit: 11840, netProfit: 3538, totalAssets: 41700, liabilities: 22800, equity: 18900 },
+                    { period: "2021", revenue: 35657, grossProfit: 14120, netProfit: 4337, totalAssets: 53600, liabilities: 28400, equity: 25200 },
                     { period: "2022", revenue: 44010, grossProfit: 17230, netProfit: 5310, totalAssets: 64100, liabilities: 33900, equity: 30200 },
                     { period: "2023", revenue: 52618, grossProfit: 20850, netProfit: 6476, totalAssets: 75300, liabilities: 39500, equity: 35800 },
                     { period: "2024", revenue: 61200, grossProfit: 24300, netProfit: 7750, totalAssets: 86500, liabilities: 45000, equity: 41500 },
                     { period: "2025", revenue: 72500, grossProfit: 28800, netProfit: 9250, totalAssets: 98500, liabilities: 51000, equity: 47500 }
                 ],
                 quarterly: [
+                    { period: "Q4/24", revenue: 16800, grossProfit: 6650, netProfit: 2150, totalAssets: 86500, liabilities: 45000, equity: 41500 },
+                    { period: "Q1/25", revenue: 17200, grossProfit: 6850, netProfit: 2210, totalAssets: 89000, liabilities: 46200, equity: 42800 },
                     { period: "Q2/25", revenue: 18100, grossProfit: 7200, netProfit: 2320, totalAssets: 92500, liabilities: 48000, equity: 44500 },
                     { period: "Q3/25", revenue: 18450, grossProfit: 7350, netProfit: 2410, totalAssets: 95200, liabilities: 49200, equity: 46000 },
                     { period: "Q4/25", revenue: 19500, grossProfit: 7800, netProfit: 2500, totalAssets: 98500, liabilities: 51000, equity: 47500 },
@@ -3970,12 +3989,16 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             financials: {
                 yearly: [
+                    { period: "2020", revenue: 720, grossProfit: 410, netProfit: 328, totalAssets: 3500, liabilities: 1200, equity: 2300 },
+                    { period: "2021", revenue: 1568, grossProfit: 980, netProfit: 736, totalAssets: 6800, liabilities: 2100, equity: 4700 },
                     { period: "2022", revenue: 1187, grossProfit: 420, netProfit: 312, totalAssets: 8200, liabilities: 2800, equity: 5400 },
                     { period: "2023", revenue: 2014, grossProfit: 1250, netProfit: 966, totalAssets: 10800, liabilities: 1800, equity: 9000 },
                     { period: "2024", revenue: 2250, grossProfit: 1350, netProfit: 1050, totalAssets: 12500, liabilities: 1600, equity: 10900 },
                     { period: "2025", revenue: 2650, grossProfit: 1620, netProfit: 1280, totalAssets: 14800, liabilities: 1900, equity: 12900 }
                 ],
                 quarterly: [
+                    { period: "Q4/24", revenue: 580, grossProfit: 340, netProfit: 260, totalAssets: 12500, liabilities: 1600, equity: 10900 },
+                    { period: "Q1/25", revenue: 620, grossProfit: 380, netProfit: 295, totalAssets: 12800, liabilities: 1650, equity: 11150 },
                     { period: "Q2/25", revenue: 680, grossProfit: 420, netProfit: 330, totalAssets: 13200, liabilities: 1700, equity: 11500 },
                     { period: "Q3/25", revenue: 610, grossProfit: 370, netProfit: 290, totalAssets: 13800, liabilities: 1850, equity: 11950 },
                     { period: "Q4/25", revenue: 720, grossProfit: 440, netProfit: 350, totalAssets: 14800, liabilities: 1900, equity: 12900 },
@@ -4013,12 +4036,16 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             financials: {
                 yearly: [
+                    { period: "2020", revenue: 59636, grossProfit: 27680, netProfit: 11099, totalAssets: 48400, liabilities: 14800, equity: 33600 },
+                    { period: "2021", revenue: 61012, grossProfit: 26350, netProfit: 10532, totalAssets: 52800, liabilities: 16900, equity: 35900 },
                     { period: "2022", revenue: 59956, grossProfit: 23980, netProfit: 8516, totalAssets: 48400, liabilities: 15600, equity: 32800 },
                     { period: "2023", revenue: 60370, grossProfit: 24590, netProfit: 9019, totalAssets: 52700, liabilities: 17100, equity: 35600 },
                     { period: "2024", revenue: 61800, grossProfit: 25500, netProfit: 9550, totalAssets: 54900, liabilities: 17800, equity: 37100 },
                     { period: "2025", revenue: 64200, grossProfit: 26800, netProfit: 9850, totalAssets: 56500, liabilities: 18000, equity: 38500 }
                 ],
                 quarterly: [
+                    { period: "Q4/24", revenue: 15600, grossProfit: 6450, netProfit: 2280, totalAssets: 54900, liabilities: 17800, equity: 37100 },
+                    { period: "Q1/25", revenue: 15400, grossProfit: 6380, netProfit: 2250, totalAssets: 55100, liabilities: 17500, equity: 37600 },
                     { period: "Q2/25", revenue: 16100, grossProfit: 6750, netProfit: 2480, totalAssets: 55400, liabilities: 17600, equity: 37800 },
                     { period: "Q3/25", revenue: 16250, grossProfit: 6800, netProfit: 2510, totalAssets: 55900, liabilities: 17700, equity: 38200 },
                     { period: "Q4/25", revenue: 16400, grossProfit: 6900, netProfit: 2490, totalAssets: 56500, liabilities: 18000, equity: 38500 },
@@ -4056,12 +4083,16 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             financials: {
                 yearly: [
+                    { period: "2020", revenue: 4366, grossProfit: 1890, netProfit: 1255, totalAssets: 35800, liabilities: 20100, equity: 15700 },
+                    { period: "2021", revenue: 7292, grossProfit: 3450, netProfit: 2695, totalAssets: 50800, liabilities: 29500, equity: 21300 },
                     { period: "2022", revenue: 6517, grossProfit: 2450, netProfit: 1684, totalAssets: 52200, liabilities: 30100, equity: 22100 },
                     { period: "2023", revenue: 7285, grossProfit: 2890, netProfit: 2173, totalAssets: 55400, liabilities: 32600, equity: 22800 },
                     { period: "2024", revenue: 8500, grossProfit: 3600, netProfit: 2700, totalAssets: 62000, liabilities: 35000, equity: 27000 },
                     { period: "2025", revenue: 9800, grossProfit: 4100, netProfit: 3150, totalAssets: 68500, liabilities: 38000, equity: 30500 }
                 ],
                 quarterly: [
+                    { period: "Q4/24", revenue: 2280, grossProfit: 950, netProfit: 710, totalAssets: 62000, liabilities: 35000, equity: 27000 },
+                    { period: "Q1/25", revenue: 2320, grossProfit: 980, netProfit: 730, totalAssets: 63200, liabilities: 35400, equity: 27800 },
                     { period: "Q2/25", revenue: 2450, grossProfit: 1020, netProfit: 790, totalAssets: 64500, liabilities: 36200, equity: 28300 },
                     { period: "Q3/25", revenue: 2380, grossProfit: 990, netProfit: 760, totalAssets: 66200, liabilities: 36800, equity: 29400 },
                     { period: "Q4/25", revenue: 2620, grossProfit: 1110, netProfit: 850, totalAssets: 68500, liabilities: 38000, equity: 30500 },
@@ -4085,6 +4116,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return fundamentalDataDB[ticker];
         }
 
+        const rnd = createSeededRandom(ticker);
+
         let closePrice = 20000;
         if (processedData && processedData.length > 0) {
             closePrice = processedData[processedData.length - 1].close;
@@ -4092,25 +4125,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let sharesOutstanding = 500000000;
         if (closePrice > 80000) {
-            sharesOutstanding = 120000000 + Math.floor(Math.random() * 50000000);
+            sharesOutstanding = 120000000 + Math.floor(rnd() * 50000000);
         } else if (closePrice < 15000) {
-            sharesOutstanding = 1200000000 + Math.floor(Math.random() * 400000000);
+            sharesOutstanding = 1200000000 + Math.floor(rnd() * 400000000);
         } else {
-            sharesOutstanding = 400000000 + Math.floor(Math.random() * 200000000);
+            sharesOutstanding = 400000000 + Math.floor(rnd() * 200000000);
         }
 
         const marketCap = closePrice * sharesOutstanding;
-        const pe = 12 + (Math.random() * 6);
+        const pe = 12 + (rnd() * 6);
         const eps = Math.round(closePrice / pe);
-        const pb = 1.2 + (Math.random() * 0.8);
+        const pb = 1.2 + (rnd() * 0.8);
         const bvps = Math.round(closePrice / pb);
         
-        const roe = 10 + (Math.random() * 8);
-        const roa = roe * (0.4 + Math.random() * 0.2);
+        const roe = 10 + (rnd() * 8);
+        const roa = roe * (0.4 + rnd() * 0.2);
         const debtToEquity = roe / roa - 1;
 
         const netProfitLastYear = Math.round(eps * (sharesOutstanding / 1000000));
-        const netMargin = 0.08 + (Math.random() * 0.12);
+        const netMargin = 0.08 + (rnd() * 0.12);
         const revenueLastYear = Math.round(netProfitLastYear / netMargin);
 
         const yearly = [];
@@ -4119,9 +4152,9 @@ document.addEventListener("DOMContentLoaded", () => {
         let curEquity = Math.round(bvps * (sharesOutstanding / 1000000));
         let curAssets = Math.round(curEquity * (1 + debtToEquity));
         
-        const years = [2025, 2024, 2023, 2022];
+        const years = [2025, 2024, 2023, 2022, 2021, 2020];
         years.forEach((yr, idx) => {
-            const factor = 1 - (idx * (0.08 + Math.random() * 0.07));
+            const factor = 1 - (idx * (0.08 + rnd() * 0.07));
             yearly.unshift({
                 period: yr.toString(),
                 revenue: Math.round(curRevenue * factor),
@@ -4134,10 +4167,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const quarterly = [
-            { period: "Q2/25", revenue: Math.round(revenueLastYear * 0.23), grossProfit: Math.round(revenueLastYear * 0.23 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.22), totalAssets: Math.round(curAssets * 0.96), liabilities: Math.round(curAssets * 0.96 - curEquity * 0.96), equity: Math.round(curEquity * 0.96) },
-            { period: "Q3/25", revenue: Math.round(revenueLastYear * 0.24), grossProfit: Math.round(revenueLastYear * 0.24 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.23), totalAssets: Math.round(curAssets * 0.98), liabilities: Math.round(curAssets * 0.98 - curEquity * 0.98), equity: Math.round(curEquity * 0.98) },
+            { period: "Q4/24", revenue: Math.round(revenueLastYear * 0.22), grossProfit: Math.round(revenueLastYear * 0.22 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.21), totalAssets: Math.round(curAssets * 0.94), liabilities: Math.round(curAssets * 0.94 - curEquity * 0.94), equity: Math.round(curEquity * 0.94) },
+            { period: "Q1/25", revenue: Math.round(revenueLastYear * 0.23), grossProfit: Math.round(revenueLastYear * 0.23 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.22), totalAssets: Math.round(curAssets * 0.96), liabilities: Math.round(curAssets * 0.96 - curEquity * 0.96), equity: Math.round(curEquity * 0.96) },
+            { period: "Q2/25", revenue: Math.round(revenueLastYear * 0.24), grossProfit: Math.round(revenueLastYear * 0.24 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.23), totalAssets: Math.round(curAssets * 0.98), liabilities: Math.round(curAssets * 0.98 - curEquity * 0.98), equity: Math.round(curEquity * 0.98) },
+            { period: "Q3/25", revenue: Math.round(revenueLastYear * 0.25), grossProfit: Math.round(revenueLastYear * 0.25 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.24), totalAssets: Math.round(curAssets * 0.99), liabilities: Math.round(curAssets * 0.99 - curEquity * 0.99), equity: Math.round(curEquity * 0.99) },
             { period: "Q4/25", revenue: Math.round(revenueLastYear * 0.28), grossProfit: Math.round(revenueLastYear * 0.28 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.27), totalAssets: curAssets, liabilities: Math.round(curAssets - curEquity), equity: curEquity },
-            { period: "Q1/26", revenue: Math.round(revenueLastYear * 0.26), grossProfit: Math.round(revenueLastYear * 0.26 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.25), totalAssets: Math.round(curAssets * 1.02), liabilities: Math.round(curAssets * 1.02 - curEquity * 1.02), equity: Math.round(curEquity * 1.02) }
+            { period: "Q1/26", revenue: Math.round(revenueLastYear * 0.27), grossProfit: Math.round(revenueLastYear * 0.27 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.26), totalAssets: Math.round(curAssets * 1.02), liabilities: Math.round(curAssets * 1.02 - curEquity * 1.02), equity: Math.round(curEquity * 1.02) }
         ];
 
         return {
@@ -4146,8 +4181,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 industry: "Sản xuất và Thương mại tổng hợp",
                 marketCap,
                 sharesOutstanding,
-                beta: 1.0 + (Math.random() * 0.5 - 0.25),
-                foreignRatio: 5 + Math.floor(Math.random() * 15),
+                beta: 1.0 + (rnd() * 0.5 - 0.25),
+                foreignRatio: 5 + Math.floor(rnd() * 15),
                 desc: `Công ty Cổ phần Đầu tư & Phát triển ${ticker} là một doanh nghiệp niêm yết trong nhóm ngành Sản xuất và Thương mại. Công ty hoạt động chủ yếu trong việc cung ứng các nguyên vật liệu công nghiệp, dịch vụ thương mại tổng hợp và quản lý tài sản, liên tục nâng cao hiệu suất hoạt động qua các năm.`,
                 leaders: [
                     { name: "Nguyễn Văn Hải", role: "Chủ tịch HĐQT" },
@@ -4177,76 +4212,165 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function drawFACalendarChart(financials, type = "yearly") {
         const dataList = type === "yearly" ? financials.yearly : financials.quarterly;
-        if (!dataList || dataList.length === 0) return "";
+        if (!dataList || dataList.length < 6) return "";
 
+        const drawList = dataList.slice(1); // 5 kỳ hiển thị
         const W = 600;
-        const H = 220;
-        const paddingLeft = 60;
-        const paddingRight = 30;
+        const H = 250;
+        const paddingLeft = 55;
+        const paddingRight = 55;
         const paddingTop = 30;
-        const paddingBottom = 40;
+        const paddingBottom = 55;
 
+        // 1. Tính toán giá trị max của Doanh thu & Lợi nhuận để làm trục Y bên trái
         let maxVal = -Infinity;
-        dataList.forEach(d => {
+        drawList.forEach(d => {
             if (d.revenue > maxVal) maxVal = d.revenue;
             if (d.netProfit > maxVal) maxVal = d.netProfit;
         });
         if (maxVal <= 0) maxVal = 1000;
         maxVal = maxVal * 1.15;
 
-        const numItems = dataList.length;
+        // 2. Tính toán tăng trưởng LNST cho 5 kỳ hiển thị so với kỳ cơ sở đứng trước
+        const growths = [];
+        for (let i = 1; i < dataList.length; i++) {
+            const prev = dataList[i-1].netProfit;
+            const cur = dataList[i].netProfit;
+            const g = prev === 0 ? 0 : ((cur - prev) / Math.abs(prev)) * 100;
+            growths.push(g);
+        }
+
+        // 3. Tính toán min/max của Tăng trưởng để làm trục Y bên phải
+        let minG = Math.min(...growths);
+        let maxG = Math.max(...growths);
+        if (minG > 0) minG = 0;
+        if (maxG < 0) maxG = 0;
+        let diffG = maxG - minG;
+        if (diffG === 0) diffG = 100;
+        minG = minG - diffG * 0.15;
+        maxG = maxG + diffG * 0.15;
+
         const chartWidth = W - paddingLeft - paddingRight;
         const chartHeight = H - paddingTop - paddingBottom;
-        const barGroupWidth = chartWidth / numItems;
-        const barWidth = Math.max(10, barGroupWidth * 0.3);
+        const barGroupWidth = chartWidth / 5;
+        const barWidth = Math.max(10, barGroupWidth * 0.28);
 
         let barsHtml = "";
         let axisHtml = "";
 
+        // Trục hoành chính và trục tung trái
         axisHtml += `
             <line x1="${paddingLeft}" y1="${H - paddingBottom}" x2="${W - paddingRight}" y2="${H - paddingBottom}" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
             <line x1="${paddingLeft}" y1="${paddingTop}" x2="${paddingLeft}" y2="${H - paddingBottom}" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+            <line x1="${W - paddingRight}" y1="${paddingTop}" x2="${W - paddingRight}" y2="${H - paddingBottom}" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
         `;
 
-        for (let i = 1; i <= 4; i++) {
-            const val = (maxVal * i) / 4;
+        // Vẽ lưới ngang & Nhãn trục Y trái (Doanh thu & Lợi nhuận) & Nhãn trục Y phải (Tăng trưởng)
+        for (let i = 0; i <= 4; i++) {
             const y = H - paddingBottom - (chartHeight * i) / 4;
+            
+            // Trục bên trái (tỷ VNĐ)
+            const leftVal = (maxVal * i) / 4;
+            let leftText = Math.round(leftVal).toLocaleString("vi-VN") + " tỷ";
+            if (i === 0) leftText = "0";
+
+            // Trục bên phải (%)
+            const rightVal = minG + ((maxG - minG) * i) / 4;
+            const sign = rightVal > 0 ? "+" : "";
+            let rightText = sign + rightVal.toFixed(1).replace(".", ",") + "%";
+            if (Math.abs(rightVal) < 0.05) rightText = "0%";
+
             axisHtml += `
-                <line x1="${paddingLeft}" y1="${y}" x2="${W - paddingRight}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="3" />
-                <text x="${paddingLeft - 8}" y="${y + 3}" fill="var(--text-secondary)" font-size="9" text-anchor="end">${Math.round(val).toLocaleString("vi-VN")} tỷ</text>
+                <line x1="${paddingLeft}" y1="${y}" x2="${W - paddingRight}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="3" />
+                <text x="${paddingLeft - 8}" y="${y + 3}" fill="var(--text-secondary)" font-size="9" text-anchor="end">${leftText}</text>
+                <text x="${W - paddingRight + 8}" y="${y + 3}" fill="#fbc02d" font-size="9" text-anchor="start">${rightText}</text>
             `;
         }
 
-        dataList.forEach((d, idx) => {
+        const points = [];
+
+        drawList.forEach((d, idx) => {
             const groupX = paddingLeft + (idx * barGroupWidth);
             const centerX = groupX + barGroupWidth / 2;
 
+            // Cột Doanh thu (Màu đỏ coral #ef5350)
             const revHeight = (d.revenue / maxVal) * chartHeight;
             const revX = centerX - barWidth - 2;
             const revY = H - paddingBottom - revHeight;
 
+            // Cột Lợi nhuận (Màu xanh xám #78909c)
             const profHeight = (d.netProfit / maxVal) * chartHeight;
             const profX = centerX + 2;
             const profY = H - paddingBottom - profHeight;
 
             barsHtml += `
                 <!-- Doanh thu -->
-                <rect x="${revX}" y="${revY}" width="${barWidth}" height="${revHeight}" fill="#3b82f6" rx="2" class="fa-bar-rect" />
-                <text x="${revX + barWidth/2}" y="${Math.max(12, revY - 4)}" fill="#3b82f6" font-size="8.5" font-weight="600" text-anchor="middle">${Math.round(d.revenue).toLocaleString("vi-VN")}</text>
+                <rect x="${revX}" y="${revY}" width="${barWidth}" height="${revHeight}" fill="#ef5350" rx="2" class="fa-bar-rect" />
+                <text x="${revX + barWidth/2}" y="${Math.max(12, revY - 4)}" fill="#ef5350" font-size="8" font-weight="600" text-anchor="middle">${Math.round(d.revenue).toLocaleString("vi-VN")}</text>
 
                 <!-- Lợi nhuận ròng -->
-                <rect x="${profX}" y="${profY}" width="${barWidth}" height="${profHeight}" fill="#10b981" rx="2" class="fa-bar-rect" />
-                <text x="${profX + barWidth/2}" y="${Math.max(12, profY - 4)}" fill="#10b981" font-size="8.5" font-weight="600" text-anchor="middle">${Math.round(d.netProfit).toLocaleString("vi-VN")}</text>
+                <rect x="${profX}" y="${profY}" width="${barWidth}" height="${profHeight}" fill="#78909c" rx="2" class="fa-bar-rect" />
+                <text x="${profX + barWidth/2}" y="${Math.max(12, profY - 4)}" fill="#78909c" font-size="8" font-weight="600" text-anchor="middle">${Math.round(d.netProfit).toLocaleString("vi-VN")}</text>
 
                 <!-- Nhãn trục hoành -->
                 <text x="${centerX}" y="${H - paddingBottom + 18}" fill="var(--text-primary)" font-size="10" font-weight="600" text-anchor="middle">${d.period}</text>
             `;
+
+            // Lưu tọa độ cho đường Tăng trưởng LNST (%)
+            const gVal = growths[idx];
+            const yVal = H - paddingBottom - ((gVal - minG) / (maxG - minG)) * chartHeight;
+            points.push({ x: centerX, y: yVal, val: gVal });
         });
 
+        // Vẽ đường nối Line (màu vàng #fbc02d)
+        let linePath = "";
+        points.forEach((p, idx) => {
+            if (idx === 0) {
+                linePath += `M ${p.x} ${p.y}`;
+            } else {
+                linePath += ` L ${p.x} ${p.y}`;
+            }
+        });
+
+        let lineHtml = `
+            <path d="${linePath}" fill="none" stroke="#fbc02d" stroke-width="2" />
+        `;
+
+        // Vẽ các điểm nút tròn & nhãn giá trị phần trăm
+        points.forEach(p => {
+            const sign = p.val >= 0 ? "+" : "";
+            const formattedVal = sign + p.val.toFixed(1).replace(".", ",") + "%";
+            lineHtml += `
+                <circle cx="${p.x}" cy="${p.y}" r="3.5" fill="#18181b" stroke="#fbc02d" stroke-width="2" />
+                <text x="${p.x}" y="${p.y - 8}" fill="#fbc02d" font-size="8.5" font-weight="700" text-anchor="middle">${formattedVal}</text>
+            `;
+        });
+
+        // Vẽ Legend ở chân biểu đồ
+        const legendY = H - 15;
+        const legendHtml = `
+            <g transform="translate(${W/2 - 180}, ${legendY})">
+                <!-- Doanh thu -->
+                <rect x="0" y="-8" width="12" height="8" fill="#ef5350" rx="1" />
+                <text x="18" y="0" fill="var(--text-secondary)" font-size="10">Doanh thu thuần</text>
+                
+                <!-- Lợi nhuận ròng -->
+                <rect x="120" y="-8" width="12" height="8" fill="#78909c" rx="1" />
+                <text x="138" y="0" fill="var(--text-secondary)" font-size="10">Lợi nhuận sau thuế</text>
+                
+                <!-- Tăng trưởng LNST -->
+                <line x1="260" y1="-4" x2="275" y2="-4" stroke="#fbc02d" stroke-width="2" />
+                <circle cx="267.5" cy="-4" r="2.5" fill="#18181b" stroke="#fbc02d" stroke-width="1.5" />
+                <text x="283" y="0" fill="var(--text-secondary)" font-size="10">Tăng trưởng LNST (%)</text>
+            </g>
+        `;
+
         return `
-        <svg viewBox="0 0 ${W} ${H}" class="fa-svg-chart">
+        <svg viewBox="0 0 ${W} ${H}" class="fa-svg-chart" style="background: transparent; width: 100%;">
             ${axisHtml}
             ${barsHtml}
+            ${lineHtml}
+            ${legendHtml}
         </svg>
         `;
     }
@@ -4399,8 +4523,10 @@ document.addEventListener("DOMContentLoaded", () => {
         let trHtml = "";
         const dataList = timeMode === "yearly" ? data.financials.yearly : data.financials.quarterly;
         
-        dataList.forEach(d => {
-            const margin = ((d.netProfit / d.revenue) * 100).toFixed(1).replace(".", ",");
+        // Bỏ qua kỳ cơ sở ở index 0
+        for (let i = 1; i < dataList.length; i++) {
+            const d = dataList[i];
+            const margin = d.revenue === 0 ? "0" : ((d.netProfit / d.revenue) * 100).toFixed(1).replace(".", ",");
             trHtml += `
                 <tr>
                     <td><strong>${d.period}</strong></td>
@@ -4410,7 +4536,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td class="number text-info" style="font-weight: 600;">${margin}%</td>
                 </tr>
             `;
-        });
+        }
 
         container.innerHTML = `
             <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
@@ -4424,11 +4550,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <div class="fa-chart-container">
                     <div class="fa-chart-title">
-                        <i class="fa-solid fa-chart-column" style="color: #3b82f6;"></i>
+                        <i class="fa-solid fa-chart-column" style="color: #ef5350;"></i>
                         Xu hướng tăng trưởng Doanh thu & Lợi nhuận ròng (${timeMode === 'yearly' ? 'Năm' : 'Quý'})
-                        <div style="margin-left: auto; display: flex; gap: 15px; font-size: 11px;">
-                            <span style="display:flex; align-items:center; gap:5px;"><span style="width:10px; height:10px; background:#3b82f6; display:inline-block; border-radius:2px;"></span> Doanh thu</span>
-                            <span style="display:flex; align-items:center; gap:5px;"><span style="width:10px; height:10px; background:#10b981; display:inline-block; border-radius:2px;"></span> Lợi nhuận ròng</span>
+                        <div style="margin-left: auto; display: flex; gap: 15px; font-size: 11px; align-items: center;">
+                            <span style="display:flex; align-items:center; gap:5px;"><span style="width:10px; height:10px; background:#ef5350; display:inline-block; border-radius:2px;"></span> Doanh thu</span>
+                            <span style="display:flex; align-items:center; gap:5px;"><span style="width:10px; height:10px; background:#78909c; display:inline-block; border-radius:2px;"></span> Lợi nhuận ròng</span>
+                            <span style="display:flex; align-items:center; gap:5px;"><span style="width:12px; height:2px; background:#fbc02d; display:inline-block;"></span> Tăng trưởng LNST</span>
                         </div>
                     </div>
                     <div style="width: 100%; height: auto; background: rgba(0,0,0,0.1); border-radius:8px; padding: 10px; box-sizing: border-box; display: flex; justify-content: center; align-items: center;">
@@ -4471,11 +4598,13 @@ document.addEventListener("DOMContentLoaded", () => {
         let trHtml = "";
         const dataList = timeMode === "yearly" ? data.financials.yearly : data.financials.quarterly;
 
-        dataList.forEach(d => {
+        // Bỏ qua kỳ cơ sở ở index 0
+        for (let i = 1; i < dataList.length; i++) {
+            const d = dataList[i];
             const assets = d.totalAssets || 0;
             const liabilities = d.liabilities || 0;
             const equity = d.equity || 0;
-            const debtRatio = ((liabilities / assets) * 100).toFixed(1).replace(".", ",");
+            const debtRatio = assets === 0 ? "0" : ((liabilities / assets) * 100).toFixed(1).replace(".", ",");
             
             trHtml += `
                 <tr>
@@ -4486,7 +4615,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td class="number text-warning" style="font-weight: 600;">${debtRatio}%</td>
                 </tr>
             `;
-        });
+        }
 
         container.innerHTML = `
             <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
