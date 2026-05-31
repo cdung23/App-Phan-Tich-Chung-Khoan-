@@ -3464,7 +3464,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <div class="lesson-detail-body">
                 <!-- Bối cảnh bài học -->
-                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; border-left: 3px solid #3b82f6; padding-left: 15px;">
+                <div style="font-size: 14.5px; color: var(--text-secondary); line-height: 1.6; border-left: 3px solid #3b82f6; padding-left: 15px;">
                     <strong>Bối cảnh lịch sử:</strong> ${lesson.context}
                 </div>
                 

@@ -2316,13 +2316,13 @@ body {
 }
 
 .schema-label-text {
-    font-size: 10px !important;
+    font-size: 11.5px !important;
     font-weight: 600 !important;
 }
 
 /* Core Signals Grid */
 .signals-sub-title {
-    font-size: 14px !important;
+    font-size: 16px !important;
     font-weight: 600 !important;
     color: var(--text-primary) !important;
     margin-bottom: 12px !important;
@@ -2362,7 +2362,7 @@ body {
     align-items: center !important;
     gap: 10px !important;
     font-weight: 600 !important;
-    font-size: 13px !important;
+    font-size: 15px !important;
     color: var(--text-primary) !important;
 }
 
@@ -2375,7 +2375,7 @@ body {
 .core-signal-item .sig-header.warn i { color: #f59e0b !important; }
 
 .core-signal-item .sig-desc {
-    font-size: 12px !important;
+    font-size: 14px !important;
     color: var(--text-secondary) !important;
     line-height: 1.5 !important;
 }
@@ -2389,7 +2389,7 @@ body {
 }
 
 .takeaway-card .takeaway-title {
-    font-size: 14px !important;
+    font-size: 16px !important;
     font-weight: 700 !important;
     color: #60a5fa !important;
     margin-bottom: 12px !important;
@@ -2404,7 +2404,7 @@ body {
     display: flex !important;
     flex-direction: column !important;
     gap: 8px !important;
-    font-size: 12.5px !important;
+    font-size: 14px !important;
     color: var(--text-secondary) !important;
     line-height: 1.5 !important;
 }
