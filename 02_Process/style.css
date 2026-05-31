@@ -2446,3 +2446,154 @@ body {
     text-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
 }
 
+/* --- PHÂN TÍCH DOANH NGHIỆP (FA) CUSTOM STYLES --- */
+.analysis-mode-selector {
+    display: flex !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    padding: 4px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    margin: 10px 14px 15px 14px !important;
+}
+
+.mode-btn {
+    flex: 1 !important;
+    padding: 9px 4px !important;
+    border: none !important;
+    background: none !important;
+    color: var(--text-secondary) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    border-radius: 8px !important;
+    transition: all 0.25s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    font-family: inherit !important;
+}
+
+.mode-btn:hover {
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.mode-btn.active {
+    color: #fff !important;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35) !important;
+}
+
+/* Các cấu trúc bảng báo cáo tài chính */
+.fa-table-container {
+    overflow-x: auto !important;
+    margin-top: 15px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border-color) !important;
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+.fa-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    text-align: left !important;
+    font-size: 13.5px !important;
+}
+
+.fa-table th, .fa-table td {
+    padding: 12px 16px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.fa-table th {
+    background: rgba(255, 255, 255, 0.03) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+}
+
+.fa-table tr:hover {
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.fa-table td.number, .fa-table th.number {
+    text-align: right !important;
+}
+
+.fa-table tr.highlight-row {
+    font-weight: 700 !important;
+    background: rgba(59, 130, 246, 0.05) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Biểu đồ tài chính SVG */
+.fa-chart-container {
+    background: rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    margin-top: 15px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+}
+
+.fa-chart-title {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.fa-svg-chart {
+    width: 100% !important;
+    height: auto !important;
+}
+
+/* Kim đo sức khỏe tài chính (Gauge Meter) */
+.health-gauge-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px !important;
+    background: rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    text-align: center !important;
+}
+
+/* Định giá & Khuyến nghị */
+.valuation-recommendation {
+    padding: 15px 20px !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    text-align: center !important;
+    margin-top: 15px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.rec-undervalued { /* Rẻ / Dưới giá trị */
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid #10b981 !important;
+    color: #10b981 !important;
+}
+
+.rec-overvalued { /* Đắt / Trên giá trị */
+    background: rgba(239, 68, 68, 0.1) !important;
+    border: 1px solid #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+.rec-fair { /* Phù hợp */
+    background: rgba(245, 158, 11, 0.1) !important;
+    border: 1px solid #f59e0b !important;
+    color: #f59e0b !important;
+}
+

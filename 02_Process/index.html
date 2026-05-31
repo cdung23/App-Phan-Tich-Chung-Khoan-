@@ -41,22 +41,54 @@
                 </div>
             </div>
             
+            <!-- Bộ chọn phân hệ phân tích TA/FA -->
+            <div class="analysis-mode-selector" id="analysis-mode-selector">
+                <button id="btn-mode-ta" class="mode-btn active">
+                    <i class="fa-solid fa-chart-line"></i> KỸ THUẬT (TA)
+                </button>
+                <button id="btn-mode-fa" class="mode-btn">
+                    <i class="fa-solid fa-building-columns"></i> DOANH NGHIỆP (FA)
+                </button>
+            </div>
+            
             <nav class="nav-menu">
-                <a href="#" class="nav-item active" id="btn-dashboard">
-                    <i class="fa-solid fa-gauge"></i> Bảng điều khiển
-                </a>
-                <a href="#" class="nav-item" id="btn-signals">
-                    <i class="fa-solid fa-bolt"></i> Tín hiệu giao dịch
-                </a>
-                <a href="#" class="nav-item" id="btn-history">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử giao dịch
-                </a>
-                <a href="#" class="nav-item" id="btn-screener">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Bộ lọc rà soát
-                </a>
-                <a href="#" class="nav-item" id="btn-lessons">
-                    <i class="fa-solid fa-book-open"></i> Bài học lịch sử
-                </a>
+                <!-- Nhóm menu Phân tích Kỹ thuật (TA) -->
+                <div id="ta-menu-items" style="display: flex; flex-direction: column; width: 100%; gap: 5px;">
+                    <a href="#" class="nav-item active" id="btn-dashboard">
+                        <i class="fa-solid fa-gauge"></i> Bảng điều khiển
+                    </a>
+                    <a href="#" class="nav-item" id="btn-signals">
+                        <i class="fa-solid fa-bolt"></i> Tín hiệu giao dịch
+                    </a>
+                    <a href="#" class="nav-item" id="btn-history">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử giao dịch
+                    </a>
+                    <a href="#" class="nav-item" id="btn-screener">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Bộ lọc rà soát
+                    </a>
+                    <a href="#" class="nav-item" id="btn-lessons">
+                        <i class="fa-solid fa-book-open"></i> Bài học lịch sử
+                    </a>
+                </div>
+                
+                <!-- Nhóm menu Phân tích Doanh nghiệp (FA) - Mặc định ẩn -->
+                <div id="fa-menu-items" class="hidden" style="display: flex; flex-direction: column; width: 100%; gap: 5px;">
+                    <a href="#" class="nav-item" id="btn-fa-overview">
+                        <i class="fa-solid fa-circle-info"></i> Tổng quan chung
+                    </a>
+                    <a href="#" class="nav-item" id="btn-fa-performance">
+                        <i class="fa-solid fa-chart-simple"></i> Kết quả kinh doanh
+                    </a>
+                    <a href="#" class="nav-item" id="btn-fa-balance">
+                        <i class="fa-solid fa-scale-balanced"></i> Cân đối kế toán
+                    </a>
+                    <a href="#" class="nav-item" id="btn-fa-ratios">
+                        <i class="fa-solid fa-percent"></i> Chỉ số tài chính
+                    </a>
+                    <a href="#" class="nav-item" id="btn-fa-valuation">
+                        <i class="fa-solid fa-calculator"></i> Định giá hợp lý
+                    </a>
+                </div>
             </nav>
             
             <div class="file-uploader-section">
@@ -601,6 +633,13 @@
                             <p style="margin-top: 10px;">Học hỏi các mô hình xu hướng dài hạn kinh điển từ lịch sử giá chứng khoán để rèn luyện tư duy thực chiến.</p>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Alternate View: Fundamental Analysis (FA) -->
+            <div class="dashboard-grid hidden" id="fa-view-container" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+                <div id="fa-tab-content" style="width: 100%; min-height: 550px;">
+                    <!-- Nội dung các Tab FA sẽ được render động thông qua JavaScript -->
                 </div>
             </div>
 

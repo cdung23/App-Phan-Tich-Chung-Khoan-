@@ -141,6 +141,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 x.btn.classList.remove("active");
                 x.el.classList.add("hidden");
             });
+            // Ẩn thêm fa-view-container khi chuyển sang các tab TA
+            const faViewContainer = document.getElementById("fa-view-container");
+            if (faViewContainer) faViewContainer.classList.add("hidden");
+            
             v.btn.classList.add("active");
             v.el.classList.remove("hidden");
             
@@ -289,7 +293,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // Update logo and header labels
         // if (logoBrand) logoBrand.textContent = currentTicker;
         const pageTitle = document.getElementById("page-title");
-        if (pageTitle) pageTitle.textContent = `Trực quan hóa & Phân tích Kỹ thuật - Mã ${currentTicker}`;
+        if (pageTitle) {
+            if (currentAnalysisMode === "fa") {
+                pageTitle.textContent = `Phân tích Doanh nghiệp & Định giá - Mã ${currentTicker}`;
+            } else {
+                pageTitle.textContent = `Trực quan hóa & Phân tích Kỹ thuật - Mã ${currentTicker}`;
+            }
+        }
         const tickerElements = document.querySelectorAll(".ticker");
         tickerElements.forEach(el => el.textContent = currentTicker);
 
@@ -300,6 +310,13 @@ document.addEventListener("DOMContentLoaded", () => {
             analyzeTickerHistory();
         } catch (err) {
             console.error("Lỗi khi quét lịch sử bài học cho mã:", err);
+        }
+
+        // Cập nhật dữ liệu phân tích doanh nghiệp FA
+        try {
+            renderFAView();
+        } catch (err) {
+            console.error("Lỗi khi cập nhật dữ liệu FA:", err);
         }
 
         // Update Dashboard
@@ -3821,6 +3838,898 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         });
+    }
+
+    // --- PHÂN TÍCH DOANH NGHIỆP (FA) LOGIC ---
+    let currentAnalysisMode = "ta"; // "ta" hoặc "fa"
+    let currentFaTab = "overview"; // overview, performance, balance, ratios, valuation
+
+    const fundamentalDataDB = {
+        "HPG": {
+            overview: {
+                companyName: "Công ty Cổ phần Tập đoàn Hòa Phát",
+                industry: "Thép và Sản phẩm Thép",
+                marketCap: 175000000000000,
+                sharesOutstanding: 5814785700,
+                beta: 1.25,
+                foreignRatio: 22.4,
+                desc: "Tập đoàn Hòa Phát là một trong những tập đoàn sản xuất công nghiệp tư nhân hàng đầu Việt Nam, khởi đầu từ một Công ty chuyên buôn bán các loại máy xây dựng từ tháng 8/1992. Hòa Phát lần lượt mở rộng sang các lĩnh vực Nội thất, Ống thép, Thép xây dựng, Nông nghiệp và Bất động sản. Hiện nay, sản xuất thép là lĩnh vực cốt lõi chiếm tỷ trọng trên 90% doanh thu và lợi nhuận của Tập đoàn.",
+                leaders: [
+                    { name: "Trần Đình Long", role: "Chủ tịch HĐQT" },
+                    { name: "Nguyễn Việt Thắng", role: "Tổng Giám đốc" }
+                ],
+                shareholders: [
+                    { name: "Trần Đình Long", ratio: 26.08 },
+                    { name: "Vũ Thị Hiền (Vợ ông Long)", ratio: 6.88 },
+                    { name: "Công ty TNHH Thương mại và Đầu tư Đại Phát", ratio: 5.5 }
+                ]
+            },
+            financials: {
+                yearly: [
+                    { period: "2021", revenue: 150865, grossProfit: 38365, netProfit: 34520, totalAssets: 178200, liabilities: 87400, equity: 90800 },
+                    { period: "2022", revenue: 141409, grossProfit: 12509, netProfit: 8483, totalAssets: 170300, liabilities: 74200, equity: 96100 },
+                    { period: "2023", revenue: 118953, grossProfit: 14453, netProfit: 6800, totalAssets: 187700, liabilities: 85300, equity: 102400 },
+                    { period: "2024", revenue: 142500, grossProfit: 20400, netProfit: 11950, totalAssets: 208500, liabilities: 95500, equity: 113000 }
+                ],
+                quarterly: [
+                    { period: "Q1/24", revenue: 31093, grossProfit: 4182, netProfit: 2869, totalAssets: 195200, liabilities: 90100, equity: 105100 },
+                    { period: "Q2/24", revenue: 39555, grossProfit: 5210, netProfit: 3320, totalAssets: 202100, liabilities: 93500, equity: 108600 },
+                    { period: "Q3/24", revenue: 34000, grossProfit: 4500, netProfit: 3020, totalAssets: 205500, liabilities: 94200, equity: 111300 },
+                    { period: "Q4/24", revenue: 37852, grossProfit: 6508, netProfit: 2741, totalAssets: 208500, liabilities: 95500, equity: 113000 }
+                ]
+            },
+            ratios: {
+                pe: 14.6,
+                pb: 1.55,
+                eps: 2055,
+                bvps: 19430,
+                roe: 10.6,
+                roa: 5.7,
+                debtToEquity: 0.85
+            }
+        },
+        "FPT": {
+            overview: {
+                companyName: "Công ty Cổ phần FPT",
+                industry: "Công nghệ thông tin & Viễn thông",
+                marketCap: 182000000000000,
+                sharesOutstanding: 1460000000,
+                beta: 0.95,
+                foreignRatio: 49.0,
+                desc: "FPT là công ty công nghệ và viễn thông hàng đầu Việt Nam. Lĩnh vực kinh doanh cốt lõi gồm: Công nghệ (xuất khẩu phần mềm, tích hợp hệ thống), Viễn thông (cung cấp dịch vụ Internet, truyền hình) và Giáo dục. FPT hiện diện tại 30 quốc gia trên thế giới và là đối tác của nhiều tập đoàn công nghệ lớn toàn cầu.",
+                leaders: [
+                    { name: "Trương Gia Bình", role: "Chủ tịch HĐQT" },
+                    { name: "Nguyễn Văn Khoa", role: "Tổng Giám đốc" }
+                ],
+                shareholders: [
+                    { name: "Trương Gia Bình", ratio: 6.1 },
+                    { name: "SCIC (Tổng công ty Đầu tư vốn nhà nước)", ratio: 5.8 },
+                    { name: "Bùi Quang Ngọc", ratio: 3.4 }
+                ]
+            },
+            financials: {
+                yearly: [
+                    { period: "2021", revenue: 35657, grossProfit: 14020, netProfit: 4337, totalAssets: 53600, liabilities: 28400, equity: 25200 },
+                    { period: "2022", revenue: 44010, grossProfit: 17230, netProfit: 5310, totalAssets: 64100, liabilities: 33900, equity: 30200 },
+                    { period: "2023", revenue: 52618, grossProfit: 20850, netProfit: 6476, totalAssets: 75300, liabilities: 39500, equity: 35800 },
+                    { period: "2024", revenue: 61200, grossProfit: 24300, netProfit: 7750, totalAssets: 86500, liabilities: 45000, equity: 41500 }
+                ],
+                quarterly: [
+                    { period: "Q1/24", revenue: 14093, grossProfit: 5580, netProfit: 1794, totalAssets: 78200, liabilities: 41200, equity: 37000 },
+                    { period: "Q2/24", revenue: 15228, grossProfit: 6040, netProfit: 1905, totalAssets: 81500, liabilities: 42800, equity: 38700 },
+                    { period: "Q3/24", revenue: 15654, grossProfit: 6210, netProfit: 2012, totalAssets: 84200, liabilities: 43900, equity: 40300 },
+                    { period: "Q4/24", revenue: 16225, grossProfit: 6470, netProfit: 2039, totalAssets: 86500, liabilities: 45000, equity: 41500 }
+                ]
+            },
+            ratios: {
+                pe: 23.5,
+                pb: 4.39,
+                eps: 5308,
+                bvps: 28420,
+                roe: 18.7,
+                roa: 8.9,
+                debtToEquity: 1.08
+            }
+        },
+        "VIX": {
+            overview: {
+                companyName: "Công ty Cổ phần Chứng khoán VIX",
+                industry: "Dịch vụ tài chính / Chứng khoán",
+                marketCap: 12500000000000,
+                sharesOutstanding: 1458000000,
+                beta: 1.65,
+                foreignRatio: 3.2,
+                desc: "Chứng khoán VIX (tiền thân là Chứng khoán Vincom) hoạt động chủ yếu trong lĩnh vực Môi giới chứng khoán, Tự doanh, Bảo lãnh phát hành và Tư vấn đầu tư tài chính. VIX nổi tiếng trên thị trường với hoạt động tự doanh hiệu quả cao và danh mục đầu tư linh hoạt.",
+                leaders: [
+                    { name: "Thái Thị Hồng An", role: "Chủ tịch HĐQT" },
+                    { name: "Trần Minh Tuấn", role: "Tổng Giám đốc" }
+                ],
+                shareholders: [
+                    { name: "Nguyễn Văn Tuấn", ratio: 15.02 },
+                    { name: "FTG Việt Nam", ratio: 4.5 },
+                    { name: "Cổ đông nhỏ lẻ khác", ratio: 80.48 }
+                ]
+            },
+            financials: {
+                yearly: [
+                    { period: "2021", revenue: 1576, grossProfit: 920, netProfit: 736, totalAssets: 9500, liabilities: 4100, equity: 5400 },
+                    { period: "2022", revenue: 1187, grossProfit: 420, netProfit: 312, totalAssets: 8200, liabilities: 2800, equity: 5400 },
+                    { period: "2023", revenue: 2014, grossProfit: 1250, netProfit: 966, totalAssets: 10800, liabilities: 1800, equity: 9000 },
+                    { period: "2024", revenue: 2250, grossProfit: 1350, netProfit: 1050, totalAssets: 12500, liabilities: 1600, equity: 10900 }
+                ],
+                quarterly: [
+                    { period: "Q1/24", revenue: 450, grossProfit: 250, netProfit: 180, totalAssets: 11200, liabilities: 1500, equity: 9700 },
+                    { period: "Q2/24", revenue: 650, grossProfit: 410, netProfit: 320, totalAssets: 11900, liabilities: 1600, equity: 10300 },
+                    { period: "Q3/24", revenue: 520, grossProfit: 310, netProfit: 245, totalAssets: 12100, liabilities: 1550, equity: 10550 },
+                    { period: "Q4/24", revenue: 630, grossProfit: 380, netProfit: 305, totalAssets: 12500, liabilities: 1600, equity: 10900 }
+                ]
+            },
+            ratios: {
+                pe: 11.9,
+                pb: 1.15,
+                eps: 720,
+                bvps: 7475,
+                roe: 9.6,
+                roa: 8.4,
+                debtToEquity: 0.15
+            }
+        },
+        "VNM": {
+            overview: {
+                companyName: "Công ty Cổ phần Sữa Việt Nam",
+                industry: "Thực phẩm và Đồ uống / Sữa",
+                marketCap: 138000000000000,
+                sharesOutstanding: 2090000000,
+                beta: 0.65,
+                foreignRatio: 46.2,
+                desc: "Vinamilk là doanh nghiệp sữa lớn nhất Việt Nam và nằm trong Top 40 công ty sữa lớn nhất thế giới về doanh thu. Các sản phẩm chính gồm sữa nước, sữa bột, sữa chua ăn, sữa đặc và nước giải khát. Vinamilk sở hữu hệ thống trang trại bò sữa đạt chuẩn quốc tế trải dài khắp cả nước.",
+                leaders: [
+                    { name: "Lê Thị Băng Tâm", role: "Chủ tịch HĐQT" },
+                    { name: "Mai Kiều Liên", role: "Tổng Giám đốc" }
+                ],
+                shareholders: [
+                    { name: "SCIC (Tổng công ty Đầu tư vốn nhà nước)", ratio: 36.0 },
+                    { name: "F&N Dairy Investments Pte Ltd", ratio: 17.69 },
+                    { name: "Platinum Victory Pte. Ltd.", ratio: 10.62 }
+                ]
+            },
+            financials: {
+                yearly: [
+                    { period: "2021", revenue: 61012, grossProfit: 26310, netProfit: 10532, totalAssets: 53100, liabilities: 17400, equity: 35700 },
+                    { period: "2022", revenue: 59956, grossProfit: 23980, netProfit: 8516, totalAssets: 48400, liabilities: 15600, equity: 32800 },
+                    { period: "2023", revenue: 60370, grossProfit: 24590, netProfit: 9019, totalAssets: 52700, liabilities: 17100, equity: 35600 },
+                    { period: "2024", revenue: 61800, grossProfit: 25500, netProfit: 9550, totalAssets: 54900, liabilities: 17800, equity: 37100 }
+                ],
+                quarterly: [
+                    { period: "Q1/24", revenue: 14112, grossProfit: 5820, netProfit: 2202, totalAssets: 53200, liabilities: 17300, equity: 35900 },
+                    { period: "Q2/24", revenue: 16550, grossProfit: 6850, netProfit: 2562, totalAssets: 54100, liabilities: 17500, equity: 36600 },
+                    { period: "Q3/24", revenue: 15520, grossProfit: 6380, netProfit: 2410, totalAssets: 54300, liabilities: 17400, equity: 36900 },
+                    { period: "Q4/24", revenue: 15618, grossProfit: 6450, netProfit: 2376, totalAssets: 54900, liabilities: 17800, equity: 37100 }
+                ]
+            },
+            ratios: {
+                pe: 14.45,
+                pb: 3.72,
+                eps: 4570,
+                bvps: 17750,
+                roe: 25.7,
+                roa: 17.4,
+                debtToEquity: 0.48
+            }
+        },
+        "SSI": {
+            overview: {
+                companyName: "Công ty Cổ phần Chứng khoán SSI",
+                industry: "Dịch vụ tài chính / Chứng khoán",
+                marketCap: 65000000000000,
+                sharesOutstanding: 1960000000,
+                beta: 1.45,
+                foreignRatio: 24.5,
+                desc: "SSI là một trong những định chế tài chính lớn nhất và có uy tín nhất Việt Nam, dẫn đầu thị phần môi giới chứng khoán trong nhiều năm. SSI cung cấp các dịch vụ tài chính toàn diện bao gồm môi giới, quản lý quỹ, ngân hàng đầu tư và dịch vụ nguồn vốn.",
+                leaders: [
+                    { name: "Nguyễn Duy Hưng", role: "Chủ tịch HĐQT" },
+                    { name: "Nguyễn Hồng Nam", role: "Tổng Giám đốc" }
+                ],
+                shareholders: [
+                    { name: "Công ty TNHH Đầu tư NDH", ratio: 20.1 },
+                    { name: "Daiwa Securities Group Inc.", ratio: 15.6 },
+                    { name: "Cổ đông nhỏ lẻ khác", ratio: 64.3 }
+                ]
+            },
+            financials: {
+                yearly: [
+                    { period: "2021", revenue: 7772, grossProfit: 3520, netProfit: 2695, totalAssets: 50800, liabilities: 36200, equity: 14600 },
+                    { period: "2022", revenue: 6517, grossProfit: 2450, netProfit: 1684, totalAssets: 52200, liabilities: 30100, equity: 22100 },
+                    { period: "2023", revenue: 7285, grossProfit: 2890, netProfit: 2173, totalAssets: 55400, liabilities: 32600, equity: 22800 },
+                    { period: "2024", revenue: 8500, grossProfit: 3600, netProfit: 2700, totalAssets: 62000, liabilities: 35000, equity: 27000 }
+                ],
+                quarterly: [
+                    { period: "Q1/24", revenue: 1950, grossProfit: 810, netProfit: 620, totalAssets: 57200, liabilities: 33500, equity: 23700 },
+                    { period: "Q2/24", revenue: 2310, grossProfit: 980, netProfit: 750, totalAssets: 59500, liabilities: 34800, equity: 24700 },
+                    { period: "Q3/24", revenue: 2040, grossProfit: 850, netProfit: 645, totalAssets: 60100, liabilities: 34700, equity: 25400 },
+                    { period: "Q4/24", revenue: 2200, grossProfit: 960, netProfit: 685, totalAssets: 62000, liabilities: 35000, equity: 27000 }
+                ]
+            },
+            ratios: {
+                pe: 24.07,
+                pb: 2.41,
+                eps: 1378,
+                bvps: 13775,
+                roe: 10.0,
+                roa: 4.35,
+                debtToEquity: 1.3
+            }
+        }
+    };
+
+    function generateFAData(ticker) {
+        if (fundamentalDataDB[ticker]) {
+            return fundamentalDataDB[ticker];
+        }
+
+        let closePrice = 20000;
+        if (processedData && processedData.length > 0) {
+            closePrice = processedData[processedData.length - 1].close;
+        }
+
+        let sharesOutstanding = 500000000;
+        if (closePrice > 80000) {
+            sharesOutstanding = 120000000 + Math.floor(Math.random() * 50000000);
+        } else if (closePrice < 15000) {
+            sharesOutstanding = 1200000000 + Math.floor(Math.random() * 400000000);
+        } else {
+            sharesOutstanding = 400000000 + Math.floor(Math.random() * 200000000);
+        }
+
+        const marketCap = closePrice * sharesOutstanding;
+        const pe = 12 + (Math.random() * 6);
+        const eps = Math.round(closePrice / pe);
+        const pb = 1.2 + (Math.random() * 0.8);
+        const bvps = Math.round(closePrice / pb);
+        
+        const roe = 10 + (Math.random() * 8);
+        const roa = roe * (0.4 + Math.random() * 0.2);
+        const debtToEquity = roe / roa - 1;
+
+        const netProfitLastYear = Math.round(eps * (sharesOutstanding / 1000000));
+        const netMargin = 0.08 + (Math.random() * 0.12);
+        const revenueLastYear = Math.round(netProfitLastYear / netMargin);
+
+        const yearly = [];
+        let curRevenue = revenueLastYear;
+        let curNetProfit = netProfitLastYear;
+        let curEquity = Math.round(bvps * (sharesOutstanding / 1000000));
+        let curAssets = Math.round(curEquity * (1 + debtToEquity));
+        
+        const years = [2024, 2023, 2022, 2021];
+        years.forEach((yr, idx) => {
+            const factor = 1 - (idx * (0.08 + Math.random() * 0.07));
+            yearly.unshift({
+                period: yr.toString(),
+                revenue: Math.round(curRevenue * factor),
+                grossProfit: Math.round(curRevenue * factor * (netMargin + 0.1)),
+                netProfit: Math.round(curNetProfit * factor),
+                totalAssets: Math.round(curAssets * factor),
+                liabilities: Math.round(curAssets * factor - curEquity * factor),
+                equity: Math.round(curEquity * factor)
+            });
+        });
+
+        const quarterly = [
+            { period: "Q1/24", revenue: Math.round(revenueLastYear * 0.22), grossProfit: Math.round(revenueLastYear * 0.22 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.21), totalAssets: curAssets, liabilities: Math.round(curAssets - curEquity), equity: curEquity },
+            { period: "Q2/24", revenue: Math.round(revenueLastYear * 0.25), grossProfit: Math.round(revenueLastYear * 0.25 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.24), totalAssets: curAssets, liabilities: Math.round(curAssets - curEquity), equity: curEquity },
+            { period: "Q3/24", revenue: Math.round(revenueLastYear * 0.24), grossProfit: Math.round(revenueLastYear * 0.24 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.26), totalAssets: curAssets, liabilities: Math.round(curAssets - curEquity), equity: curEquity },
+            { period: "Q4/24", revenue: Math.round(revenueLastYear * 0.29), grossProfit: Math.round(revenueLastYear * 0.29 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.29), totalAssets: curAssets, liabilities: Math.round(curAssets - curEquity), equity: curEquity }
+        ];
+
+        return {
+            overview: {
+                companyName: `Công ty Cổ phần Đầu tư & Phát triển ${ticker}`,
+                industry: "Sản xuất và Thương mại tổng hợp",
+                marketCap,
+                sharesOutstanding,
+                beta: 1.0 + (Math.random() * 0.5 - 0.25),
+                foreignRatio: 5 + Math.floor(Math.random() * 15),
+                desc: `Công ty Cổ phần Đầu tư & Phát triển ${ticker} là một doanh nghiệp niêm yết trong nhóm ngành Sản xuất và Thương mại. Công ty hoạt động chủ yếu trong việc cung ứng các nguyên vật liệu công nghiệp, dịch vụ thương mại tổng hợp và quản lý tài sản, liên tục nâng cao hiệu suất hoạt động qua các năm.`,
+                leaders: [
+                    { name: "Nguyễn Văn Hải", role: "Chủ tịch HĐQT" },
+                    { name: "Phạm Minh Đức", role: "Tổng Giám đốc" }
+                ],
+                shareholders: [
+                    { name: "Ban lãnh đạo sáng lập", ratio: 18.5 },
+                    { name: "Tổng công ty Đầu tư SCIC", ratio: 10.2 },
+                    { name: "Các quỹ đầu tư nước ngoài", ratio: 7.8 }
+                ]
+            },
+            financials: {
+                yearly,
+                quarterly
+            },
+            ratios: {
+                pe,
+                pb,
+                eps,
+                bvps,
+                roe,
+                roa,
+                debtToEquity
+            }
+        };
+    }
+
+    function drawFACalendarChart(financials, type = "yearly") {
+        const dataList = type === "yearly" ? financials.yearly : financials.quarterly;
+        if (!dataList || dataList.length === 0) return "";
+
+        const W = 600;
+        const H = 220;
+        const paddingLeft = 60;
+        const paddingRight = 30;
+        const paddingTop = 30;
+        const paddingBottom = 40;
+
+        let maxVal = -Infinity;
+        dataList.forEach(d => {
+            if (d.revenue > maxVal) maxVal = d.revenue;
+            if (d.netProfit > maxVal) maxVal = d.netProfit;
+        });
+        if (maxVal <= 0) maxVal = 1000;
+        maxVal = maxVal * 1.15;
+
+        const numItems = dataList.length;
+        const chartWidth = W - paddingLeft - paddingRight;
+        const chartHeight = H - paddingTop - paddingBottom;
+        const barGroupWidth = chartWidth / numItems;
+        const barWidth = Math.max(10, barGroupWidth * 0.3);
+
+        let barsHtml = "";
+        let axisHtml = "";
+
+        axisHtml += `
+            <line x1="${paddingLeft}" y1="${H - paddingBottom}" x2="${W - paddingRight}" y2="${H - paddingBottom}" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+            <line x1="${paddingLeft}" y1="${paddingTop}" x2="${paddingLeft}" y2="${H - paddingBottom}" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+        `;
+
+        for (let i = 1; i <= 4; i++) {
+            const val = (maxVal * i) / 4;
+            const y = H - paddingBottom - (chartHeight * i) / 4;
+            axisHtml += `
+                <line x1="${paddingLeft}" y1="${y}" x2="${W - paddingRight}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="3" />
+                <text x="${paddingLeft - 8}" y="${y + 3}" fill="var(--text-secondary)" font-size="9" text-anchor="end">${Math.round(val).toLocaleString("vi-VN")} tỷ</text>
+            `;
+        }
+
+        dataList.forEach((d, idx) => {
+            const groupX = paddingLeft + (idx * barGroupWidth);
+            const centerX = groupX + barGroupWidth / 2;
+
+            const revHeight = (d.revenue / maxVal) * chartHeight;
+            const revX = centerX - barWidth - 2;
+            const revY = H - paddingBottom - revHeight;
+
+            const profHeight = (d.netProfit / maxVal) * chartHeight;
+            const profX = centerX + 2;
+            const profY = H - paddingBottom - profHeight;
+
+            barsHtml += `
+                <!-- Doanh thu -->
+                <rect x="${revX}" y="${revY}" width="${barWidth}" height="${revHeight}" fill="#3b82f6" rx="2" class="fa-bar-rect" />
+                <text x="${revX + barWidth/2}" y="${Math.max(12, revY - 4)}" fill="#3b82f6" font-size="8.5" font-weight="600" text-anchor="middle">${Math.round(d.revenue).toLocaleString("vi-VN")}</text>
+
+                <!-- Lợi nhuận ròng -->
+                <rect x="${profX}" y="${profY}" width="${barWidth}" height="${profHeight}" fill="#10b981" rx="2" class="fa-bar-rect" />
+                <text x="${profX + barWidth/2}" y="${Math.max(12, profY - 4)}" fill="#10b981" font-size="8.5" font-weight="600" text-anchor="middle">${Math.round(d.netProfit).toLocaleString("vi-VN")}</text>
+
+                <!-- Nhãn trục hoành -->
+                <text x="${centerX}" y="${H - paddingBottom + 18}" fill="var(--text-primary)" font-size="10" font-weight="600" text-anchor="middle">${d.period}</text>
+            `;
+        });
+
+        return `
+        <svg viewBox="0 0 ${W} ${H}" class="fa-svg-chart">
+            ${axisHtml}
+            ${barsHtml}
+        </svg>
+        `;
+    }
+
+    function calculateFAValuation(data) {
+        let currentPrice = 20000;
+        if (processedData && processedData.length > 0) {
+            currentPrice = processedData[processedData.length - 1].close;
+        }
+
+        const eps = data.ratios.eps;
+        const bvps = data.ratios.bvps;
+
+        const targetPE = 15;
+        const valPE = eps * targetPE;
+
+        const targetPB = 1.8;
+        const valPB = bvps * targetPB;
+
+        const g = 10;
+        const valGraham = Math.round(eps * (8.5 + 2 * g) * 4.4 / 7.5);
+
+        const fairValue = Math.round((valPE + valPB + valGraham) / 3);
+        const pctDiff = ((fairValue - currentPrice) / currentPrice) * 100;
+        let recClass = "rec-fair";
+        let recText = "PHÙ HỢP TÍCH LŨY";
+        let recDesc = "Thị giá hiện tại đang ở vùng hợp lý so với năng lực cốt lõi của doanh nghiệp.";
+        let icon = "fa-circle-check";
+
+        if (pctDiff > 15) {
+            recClass = "rec-undervalued";
+            recText = "DƯỚI GIÁ TRỊ (RẺ)";
+            recDesc = `Thị giá hiện tại đang thấp hơn định giá hợp lý khoảng ${Math.abs(pctDiff).toFixed(1).replace(".", ",")}% - Biên an toàn cao.`;
+            icon = "fa-circle-arrow-down";
+        } else if (pctDiff < -15) {
+            recClass = "rec-overvalued";
+            recText = "TRÊN GIÁ TRỊ (ĐẮT)";
+            recDesc = `Thị giá hiện tại cao hơn định giá hợp lý khoảng ${Math.abs(pctDiff).toFixed(1).replace(".", ",")}% - Định giá phản ánh quá nhiều kỳ vọng.`;
+            icon = "fa-circle-arrow-up";
+        }
+
+        return {
+            valPE,
+            valPB,
+            valGraham,
+            fairValue,
+            currentPrice,
+            pctDiff,
+            recClass,
+            recText,
+            recDesc,
+            icon
+        };
+    }
+
+    function renderFAView() {
+        const container = document.getElementById("fa-tab-content");
+        if (!container) return;
+
+        const data = generateFAData(currentTicker);
+
+        if (currentFaTab === "overview") {
+            renderFAOverview(data, container);
+        } else if (currentFaTab === "performance") {
+            renderFAPerformance(data, container);
+        } else if (currentFaTab === "balance") {
+            renderFABalanceSheet(data, container);
+        } else if (currentFaTab === "ratios") {
+            renderFARatios(data, container);
+        } else if (currentFaTab === "valuation") {
+            renderFAValuation(data, container);
+        }
+    }
+
+    function renderFAOverview(data, container) {
+        let leadersHtml = "";
+        data.overview.leaders.forEach(l => {
+            leadersHtml += `
+                <div style="padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+                    <span style="font-weight:600; color: var(--text-primary);">${l.name}</span>
+                    <span style="color: var(--text-secondary); font-size: 12.5px;">${l.role}</span>
+                </div>
+            `;
+        });
+
+        let shareholdersHtml = "";
+        data.overview.shareholders.forEach(s => {
+            shareholdersHtml += `
+                <div style="padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+                    <span style="font-weight:600; color: var(--text-primary);">${s.name}</span>
+                    <span style="color: #3b82f6; font-weight:700;">${s.ratio.toFixed(2).replace(".", ",")}%</span>
+                </div>
+            `;
+        });
+
+        container.innerHTML = `
+            <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                    <div>
+                        <h2 style="color: var(--text-primary); margin:0;">${data.overview.companyName} (${currentTicker})</h2>
+                        <span style="color: var(--text-secondary); font-size: 13px; display: block; margin-top: 4px;">Phân ngành: <strong>${data.overview.industry}</strong></span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="color: var(--text-secondary); font-size: 12px; display: block;">Vốn hóa thị trường</span>
+                        <strong style="color: #f59e0b; font-size: 18px;">${(data.overview.marketCap / 1000000000).toLocaleString("vi-VN", {maximumFractionDigits: 1})} tỷ VNĐ</strong>
+                    </div>
+                </div>
+
+                <div class="kpi-container" style="margin-top: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="kpi-card" style="padding: 15px;">
+                        <span style="color: var(--text-secondary); font-size: 12px;">Cổ phiếu lưu hành</span>
+                        <div style="font-size: 16px; font-weight:700; color: var(--text-primary); margin-top: 5px;">${data.overview.sharesOutstanding.toLocaleString("vi-VN")} cp</div>
+                    </div>
+                    <div class="kpi-card" style="padding: 15px;">
+                        <span style="color: var(--text-secondary); font-size: 12px;">Hệ số Beta</span>
+                        <div style="font-size: 16px; font-weight:700; color: var(--text-primary); margin-top: 5px;">${data.overview.beta.toFixed(2).replace(".", ",")}</div>
+                    </div>
+                    <div class="kpi-card" style="padding: 15px;">
+                        <span style="color: var(--text-secondary); font-size: 12px;">Tỷ lệ sở hữu nước ngoài</span>
+                        <div style="font-size: 16px; font-weight:700; color: var(--text-primary); margin-top: 5px;">${data.overview.foreignRatio.toFixed(1).replace(".", ",")}%</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="color: var(--text-primary); margin-bottom: 8px;"><i class="fa-solid fa-file-invoice"></i> Hồ sơ doanh nghiệp</h3>
+                    <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; text-align: justify; margin: 0;">${data.overview.desc}</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 5px;">
+                    <div>
+                        <h3 style="color: var(--text-primary); margin-bottom: 10px;"><i class="fa-solid fa-users"></i> Ban lãnh đạo</h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            ${leadersHtml}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--text-primary); margin-bottom: 10px;"><i class="fa-solid fa-chart-pie"></i> Cổ đông lớn</h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            ${shareholdersHtml}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderFAPerformance(data, container) {
+        const timeMode = container.dataset.timeMode || "yearly";
+
+        let trHtml = "";
+        const dataList = timeMode === "yearly" ? data.financials.yearly : data.financials.quarterly;
+        
+        dataList.forEach(d => {
+            const margin = ((d.netProfit / d.revenue) * 100).toFixed(1).replace(".", ",");
+            trHtml += `
+                <tr>
+                    <td><strong>${d.period}</strong></td>
+                    <td class="number">${Math.round(d.revenue).toLocaleString("vi-VN")} tỷ</td>
+                    <td class="number">${Math.round(d.grossProfit).toLocaleString("vi-VN")} tỷ</td>
+                    <td class="number highlight-row">${Math.round(d.netProfit).toLocaleString("vi-VN")} tỷ</td>
+                    <td class="number text-info" style="font-weight: 600;">${margin}%</td>
+                </tr>
+            `;
+        });
+
+        container.innerHTML = `
+            <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                    <h2 style="color: var(--text-primary); margin:0;"><i class="fa-solid fa-chart-line"></i> Báo cáo kết quả hoạt động kinh doanh</h2>
+                    <div class="lessons-sub-tabs" style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 3px; display: flex; border: 1px solid var(--border-color);">
+                        <button id="btn-fa-perf-yearly" class="sub-tab-btn ${timeMode === 'yearly' ? 'active' : ''}" style="padding: 6px 12px; font-size:12px; border:none; background:none; cursor:pointer;">Hằng năm</button>
+                        <button id="btn-fa-perf-quarterly" class="sub-tab-btn ${timeMode === 'quarterly' ? 'active' : ''}" style="padding: 6px 12px; font-size:12px; border:none; background:none; cursor:pointer;">Hằng quý</button>
+                    </div>
+                </div>
+
+                <div class="fa-chart-container">
+                    <div class="fa-chart-title">
+                        <i class="fa-solid fa-chart-column" style="color: #3b82f6;"></i>
+                        Xu hướng tăng trưởng Doanh thu & Lợi nhuận ròng (${timeMode === 'yearly' ? 'Năm' : 'Quý'})
+                        <div style="margin-left: auto; display: flex; gap: 15px; font-size: 11px;">
+                            <span style="display:flex; align-items:center; gap:5px;"><span style="width:10px; height:10px; background:#3b82f6; display:inline-block; border-radius:2px;"></span> Doanh thu</span>
+                            <span style="display:flex; align-items:center; gap:5px;"><span style="width:10px; height:10px; background:#10b981; display:inline-block; border-radius:2px;"></span> Lợi nhuận ròng</span>
+                        </div>
+                    </div>
+                    <div style="width: 100%; height: 220px; background: rgba(0,0,0,0.1); border-radius:8px;">
+                        ${drawFACalendarChart(data.financials, timeMode)}
+                    </div>
+                </div>
+
+                <div class="fa-table-container">
+                    <table class="fa-table">
+                        <thead>
+                            <tr>
+                                <th>Kỳ báo cáo</th>
+                                <th class="number">Doanh thu thuần</th>
+                                <th class="number">Lợi nhuận gộp</th>
+                                <th class="number highlight-row">Lợi nhuận sau thuế</th>
+                                <th class="number">Biên lợi nhuận ròng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${trHtml}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        document.getElementById("btn-fa-perf-yearly").addEventListener("click", () => {
+            container.dataset.timeMode = "yearly";
+            renderFAPerformance(data, container);
+        });
+        document.getElementById("btn-fa-perf-quarterly").addEventListener("click", () => {
+            container.dataset.timeMode = "quarterly";
+            renderFAPerformance(data, container);
+        });
+    }
+
+    function renderFABalanceSheet(data, container) {
+        const timeMode = container.dataset.timeMode || "yearly";
+
+        let trHtml = "";
+        const dataList = timeMode === "yearly" ? data.financials.yearly : data.financials.quarterly;
+
+        dataList.forEach(d => {
+            const assets = d.totalAssets || 0;
+            const liabilities = d.liabilities || 0;
+            const equity = d.equity || 0;
+            const debtRatio = ((liabilities / assets) * 100).toFixed(1).replace(".", ",");
+            
+            trHtml += `
+                <tr>
+                    <td><strong>${d.period}</strong></td>
+                    <td class="number highlight-row">${Math.round(assets).toLocaleString("vi-VN")} tỷ</td>
+                    <td class="number">${Math.round(liabilities).toLocaleString("vi-VN")} tỷ</td>
+                    <td class="number" style="color: #10b981; font-weight:700;">${Math.round(equity).toLocaleString("vi-VN")} tỷ</td>
+                    <td class="number text-warning" style="font-weight: 600;">${debtRatio}%</td>
+                </tr>
+            `;
+        });
+
+        container.innerHTML = `
+            <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                    <h2 style="color: var(--text-primary); margin:0;"><i class="fa-solid fa-scale-balanced"></i> Bảng cân đối kế toán rút gọn</h2>
+                    <div class="lessons-sub-tabs" style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 3px; display: flex; border: 1px solid var(--border-color);">
+                        <button id="btn-fa-bal-yearly" class="sub-tab-btn ${timeMode === 'yearly' ? 'active' : ''}" style="padding: 6px 12px; font-size:12px; border:none; background:none; cursor:pointer;">Hằng năm</button>
+                        <button id="btn-fa-bal-quarterly" class="sub-tab-btn ${timeMode === 'quarterly' ? 'active' : ''}" style="padding: 6px 12px; font-size:12px; border:none; background:none; cursor:pointer;">Hằng quý</button>
+                    </div>
+                </div>
+
+                <div class="fa-table-container">
+                    <table class="fa-table">
+                        <thead>
+                            <tr>
+                                <th>Kỳ báo cáo</th>
+                                <th class="number highlight-row">Tổng tài sản</th>
+                                <th class="number">Nợ phải trả</th>
+                                <th class="number">Vốn chủ sở hữu</th>
+                                <th class="number">Hệ số Nợ/Tài sản</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${trHtml}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; border-left: 3px solid #f59e0b; padding-left: 15px; background: rgba(255,255,255,0.01); padding: 12px 15px; border-radius: 4px;">
+                    <strong>Phân tích cơ cấu nguồn vốn:</strong> Mối quan hệ giữa tài sản, nợ và vốn chủ sở hữu thể hiện mức độ lành mạnh tài chính và khả năng tự chủ nguồn vốn của doanh nghiệp. Hệ số nợ/tài sản nằm dưới mức 50% thường thể hiện sức mạnh tài chính an toàn cao.
+                </div>
+            </div>
+        `;
+
+        document.getElementById("btn-fa-bal-yearly").addEventListener("click", () => {
+            container.dataset.timeMode = "yearly";
+            renderFABalanceSheet(data, container);
+        });
+        document.getElementById("btn-fa-bal-quarterly").addEventListener("click", () => {
+            container.dataset.timeMode = "quarterly";
+            renderFABalanceSheet(data, container);
+        });
+    }
+
+    function renderFARatios(data, container) {
+        container.innerHTML = `
+            <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+                <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                    <h2 style="color: var(--text-primary); margin:0;"><i class="fa-solid fa-percent"></i> Các chỉ số tài chính cốt lõi</h2>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; background: rgba(0,0,0,0.15);">
+                        <h3 style="color: var(--text-primary); margin-top: 0; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;">Nhóm Chỉ Số Định Giá</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                                <span style="color: var(--text-secondary);">Chỉ số P/E (Hệ số giá trên thu nhập)</span>
+                                <strong style="color: var(--text-primary);">${data.ratios.pe.toFixed(2).replace(".", ",")} lần</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                                <span style="color: var(--text-secondary);">Chỉ số P/B (Hệ số giá trên giá trị sổ sách)</span>
+                                <strong style="color: var(--text-primary);">${data.ratios.pb.toFixed(2).replace(".", ",")} lần</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                                <span style="color: var(--text-secondary);">EPS 4 quý gần nhất (Lợi nhuận trên mỗi cp)</span>
+                                <strong style="color: #10b981;">${data.ratios.eps.toLocaleString("vi-VN")} VNĐ</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                                <span style="color: var(--text-secondary);">BVPS (Giá trị sổ sách trên mỗi cp)</span>
+                                <strong style="color: var(--text-primary);">${data.ratios.bvps.toLocaleString("vi-VN")} VNĐ</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; background: rgba(0,0,0,0.15);">
+                        <h3 style="color: var(--text-primary); margin-top: 0; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;">Nhóm Chỉ Số Hiệu Quả & Sức Khỏe</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                                <span style="color: var(--text-secondary);">ROE (Tỷ suất LN trên Vốn chủ sở hữu)</span>
+                                <strong style="color: #3b82f6;">${data.ratios.roe.toFixed(2).replace(".", ",")}%</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                                <span style="color: var(--text-secondary);">ROA (Tỷ suất LN trên Tổng tài sản)</span>
+                                <strong style="color: var(--text-primary);">${data.ratios.roa.toFixed(2).replace(".", ",")}%</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                                <span style="color: var(--text-secondary);">Tỷ lệ Nợ / Vốn chủ sở hữu</span>
+                                <strong style="color: var(--text-primary);">${data.ratios.debtToEquity.toFixed(2).replace(".", ",")} lần</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                                <span style="color: var(--text-secondary);">Sức khỏe tài chính</span>
+                                <strong style="color: #10b981;"><i class="fa-solid fa-circle-check"></i> AN TOÀN</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="health-gauge-container">
+                    <span style="color: var(--text-secondary); font-size: 13px; font-weight:600;">SỨC KHỎE TÀI CHÍNH TỔNG QUAN (ROE vs Tỷ Lệ Nợ)</span>
+                    <div style="display:flex; gap: 30px; margin-top: 15px; width: 100%; justify-content:center;">
+                        <div style="text-align: center;">
+                            <div style="width: 70px; height: 70px; border-radius:50%; border: 4px solid #3b82f6; display:flex; justify-content:center; align-items:center; font-weight:700; color:#3b82f6; font-size:15px; margin: 0 auto 5px auto;">
+                                ${data.ratios.roe.toFixed(1).replace(".", ",")}%
+                            </div>
+                            <span style="font-size:11px; color: var(--text-secondary);">ROE (Tốt > 15%)</span>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="width: 70px; height: 70px; border-radius:50%; border: 4px solid #10b981; display:flex; justify-content:center; align-items:center; font-weight:700; color:#10b981; font-size:15px; margin: 0 auto 5px auto;">
+                                ${data.ratios.debtToEquity.toFixed(1).replace(".", ",")}
+                            </div>
+                            <span style="font-size:11px; color: var(--text-secondary);">Nợ/Vốn CSH (Tốt < 1,5)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderFAValuation(data, container) {
+        const val = calculateFAValuation(data);
+
+        container.innerHTML = `
+            <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+                <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                    <h2 style="color: var(--text-primary); margin:0;"><i class="fa-solid fa-calculator"></i> Định giá hợp lý & Biên an toàn</h2>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="display:flex; flex-direction:column; gap:12px; justify-content:center; padding: 10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom: 10px; border-bottom:1px dashed var(--border-color);">
+                            <span style="color: var(--text-secondary); font-size:13.5px;">Thị giá hiện tại (${currentTicker})</span>
+                            <strong style="color: var(--text-primary); font-size: 16px;">${val.currentPrice.toLocaleString("vi-VN")} VNĐ</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom: 10px; border-bottom:1px dashed var(--border-color);">
+                            <span style="color: var(--text-secondary); font-size:13.5px;">Định giá hợp lý trung bình</span>
+                            <strong style="color: #3b82f6; font-size: 18px;">${val.fairValue.toLocaleString("vi-VN")} VNĐ</strong>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 5px;">
+                            <div class="valuation-recommendation ${val.recClass}">
+                                <i class="fa-solid ${val.icon}"></i> KHUYƠN NGHỊ: ${val.recText}
+                            </div>
+                            <span style="font-size:12.5px; color: var(--text-secondary); display:block; margin-top:10px;">${val.recDesc}</span>
+                        </div>
+                    </div>
+
+                    <div style="border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; background: rgba(0,0,0,0.15);">
+                        <h3 style="color: var(--text-primary); margin-top: 0; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;">Kết quả theo mô hình</h3>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                                <span style="color: var(--text-secondary);">1. Định giá theo P/E mục tiêu (15x)</span>
+                                <strong style="color: var(--text-primary);">${val.valPE.toLocaleString("vi-VN")} VNĐ</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                                <span style="color: var(--text-secondary);">2. Định giá theo P/B mục tiêu (1.8x)</span>
+                                <strong style="color: var(--text-primary);">${val.valPB.toLocaleString("vi-VN")} VNĐ</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                                <span style="color: var(--text-secondary);">3. Định giá theo mô hình Graham</span>
+                                <strong style="color: var(--text-primary);">${val.valGraham.toLocaleString("vi-VN")} VNĐ</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; border-left: 3px solid #3b82f6; padding-left: 15px; background: rgba(255,255,255,0.01); padding: 12px 15px; border-radius: 4px;">
+                    <strong>Nguyên lý định giá:</strong> Giá trị hợp lý là kết quả trung bình trọng số của ba phương pháp định giá phổ biến. Một cổ phiếu có thị giá thấp hơn giá trị hợp lý trên 15% sẽ tạo ra <strong>Biên an toàn (Margin of Safety)</strong> đủ lớn để bảo vệ nhà đầu tư khỏi các rủi ro biến động ngắn hạn.
+                </div>
+            </div>
+        `;
+    }
+
+    const btnModeTa = document.getElementById("btn-mode-ta");
+    const btnModeFa = document.getElementById("btn-mode-fa");
+    const taMenuItems = document.getElementById("ta-menu-items");
+    const faMenuItems = document.getElementById("fa-menu-items");
+    
+    const faViewContainer = document.getElementById("fa-view-container");
+
+    function hideAllViews() {
+        if (dashboardView) dashboardView.classList.add("hidden");
+        if (signalsView) signalsView.classList.add("hidden");
+        if (historyView) historyView.classList.add("hidden");
+        if (screenerView) screenerView.classList.add("hidden");
+        if (lessonsView) lessonsView.classList.add("hidden");
+        if (faViewContainer) faViewContainer.classList.add("hidden");
+
+        const menuItems = document.querySelectorAll(".nav-menu .nav-item");
+        menuItems.forEach(item => item.classList.remove("active"));
+    }
+
+    if (btnModeTa && btnModeFa) {
+        btnModeTa.addEventListener("click", () => {
+            currentAnalysisMode = "ta";
+            btnModeTa.classList.add("active");
+            btnModeFa.classList.remove("active");
+            
+            taMenuItems.classList.remove("hidden");
+            faMenuItems.classList.add("hidden");
+
+            hideAllViews();
+            if (dashboardView) dashboardView.classList.remove("hidden");
+            const btnDashboard = document.getElementById("btn-dashboard");
+            if (btnDashboard) btnDashboard.classList.add("active");
+            const pageTitle = document.getElementById("page-title");
+            if (pageTitle) pageTitle.textContent = `Trực quan hóa & Phân tích Kỹ thuật - Mã ${currentTicker}`;
+        });
+
+        btnModeFa.addEventListener("click", () => {
+            currentAnalysisMode = "fa";
+            btnModeFa.classList.add("active");
+            btnModeTa.classList.remove("active");
+            
+            faMenuItems.classList.remove("hidden");
+            taMenuItems.classList.add("hidden");
+
+            currentFaTab = "overview";
+            hideAllViews();
+            if (faViewContainer) faViewContainer.classList.remove("hidden");
+            const btnFaOverview = document.getElementById("btn-fa-overview");
+            if (btnFaOverview) btnFaOverview.classList.add("active");
+            
+            const pageTitle = document.getElementById("page-title");
+            if (pageTitle) pageTitle.textContent = `Phân tích Doanh nghiệp & Định giá - Mã ${currentTicker}`;
+            
+            renderFAView();
+        });
+    }
+
+    const faOverviewBtn = document.getElementById("btn-fa-overview");
+    const faPerformanceBtn = document.getElementById("btn-fa-performance");
+    const faBalanceBtn = document.getElementById("btn-fa-balance");
+    const faRatiosBtn = document.getElementById("btn-fa-ratios");
+    const faValuationBtn = document.getElementById("btn-fa-valuation");
+
+    const faButtons = [faOverviewBtn, faPerformanceBtn, faBalanceBtn, faRatiosBtn, faValuationBtn];
+
+    function activateFaMenu(activeBtn, tabName) {
+        faButtons.forEach(btn => {
+            if (btn) btn.classList.remove("active");
+        });
+        if (activeBtn) activeBtn.classList.add("active");
+        currentFaTab = tabName;
+        renderFAView();
+    }
+
+    if (faOverviewBtn) {
+        faOverviewBtn.addEventListener("click", () => activateFaMenu(faOverviewBtn, "overview"));
+    }
+    if (faPerformanceBtn) {
+        faPerformanceBtn.addEventListener("click", () => activateFaMenu(faPerformanceBtn, "performance"));
+    }
+    if (faBalanceBtn) {
+        faBalanceBtn.addEventListener("click", () => activateFaMenu(faBalanceBtn, "balance"));
+    }
+    if (faRatiosBtn) {
+        faRatiosBtn.addEventListener("click", () => activateFaMenu(faRatiosBtn, "ratios"));
+    }
+    if (faValuationBtn) {
+        faValuationBtn.addEventListener("click", () => activateFaMenu(faValuationBtn, "valuation"));
     }
 
     // Khởi tạo Firebase
