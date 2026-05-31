@@ -3874,26 +3874,26 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             financials: {
                 yearly: [
-                    { period: "2021", revenue: 150865, grossProfit: 38365, netProfit: 34520, totalAssets: 178200, liabilities: 87400, equity: 90800 },
                     { period: "2022", revenue: 141409, grossProfit: 12509, netProfit: 8483, totalAssets: 170300, liabilities: 74200, equity: 96100 },
                     { period: "2023", revenue: 118953, grossProfit: 14453, netProfit: 6800, totalAssets: 187700, liabilities: 85300, equity: 102400 },
-                    { period: "2024", revenue: 142500, grossProfit: 20400, netProfit: 11950, totalAssets: 208500, liabilities: 95500, equity: 113000 }
+                    { period: "2024", revenue: 142500, grossProfit: 20400, netProfit: 11950, totalAssets: 208500, liabilities: 95500, equity: 113000 },
+                    { period: "2025", revenue: 154800, grossProfit: 24800, netProfit: 13200, totalAssets: 215000, liabilities: 92000, equity: 123000 }
                 ],
                 quarterly: [
-                    { period: "Q1/24", revenue: 31093, grossProfit: 4182, netProfit: 2869, totalAssets: 195200, liabilities: 90100, equity: 105100 },
-                    { period: "Q2/24", revenue: 39555, grossProfit: 5210, netProfit: 3320, totalAssets: 202100, liabilities: 93500, equity: 108600 },
-                    { period: "Q3/24", revenue: 34000, grossProfit: 4500, netProfit: 3020, totalAssets: 205500, liabilities: 94200, equity: 111300 },
-                    { period: "Q4/24", revenue: 37852, grossProfit: 6508, netProfit: 2741, totalAssets: 208500, liabilities: 95500, equity: 113000 }
+                    { period: "Q2/25", revenue: 38500, grossProfit: 5800, netProfit: 3320, totalAssets: 210000, liabilities: 93000, equity: 117000 },
+                    { period: "Q3/25", revenue: 37200, grossProfit: 5500, netProfit: 3050, totalAssets: 212500, liabilities: 93500, equity: 119000 },
+                    { period: "Q4/25", revenue: 41100, grossProfit: 6900, netProfit: 3530, totalAssets: 215000, liabilities: 92000, equity: 123000 },
+                    { period: "Q1/26", revenue: 39800, grossProfit: 6200, netProfit: 3180, totalAssets: 218200, liabilities: 92200, equity: 126000 }
                 ]
             },
             ratios: {
-                pe: 14.6,
-                pb: 1.55,
-                eps: 2055,
-                bvps: 19430,
-                roe: 10.6,
-                roa: 5.7,
-                debtToEquity: 0.85
+                pe: 13.5,
+                pb: 1.45,
+                eps: 2270,
+                bvps: 21150,
+                roe: 11.2,
+                roa: 6.2,
+                debtToEquity: 0.75
             }
         },
         "FPT": {
@@ -3917,26 +3917,26 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             financials: {
                 yearly: [
-                    { period: "2021", revenue: 35657, grossProfit: 14020, netProfit: 4337, totalAssets: 53600, liabilities: 28400, equity: 25200 },
                     { period: "2022", revenue: 44010, grossProfit: 17230, netProfit: 5310, totalAssets: 64100, liabilities: 33900, equity: 30200 },
                     { period: "2023", revenue: 52618, grossProfit: 20850, netProfit: 6476, totalAssets: 75300, liabilities: 39500, equity: 35800 },
-                    { period: "2024", revenue: 61200, grossProfit: 24300, netProfit: 7750, totalAssets: 86500, liabilities: 45000, equity: 41500 }
+                    { period: "2024", revenue: 61200, grossProfit: 24300, netProfit: 7750, totalAssets: 86500, liabilities: 45000, equity: 41500 },
+                    { period: "2025", revenue: 72500, grossProfit: 28800, netProfit: 9250, totalAssets: 98500, liabilities: 51000, equity: 47500 }
                 ],
                 quarterly: [
-                    { period: "Q1/24", revenue: 14093, grossProfit: 5580, netProfit: 1794, totalAssets: 78200, liabilities: 41200, equity: 37000 },
-                    { period: "Q2/24", revenue: 15228, grossProfit: 6040, netProfit: 1905, totalAssets: 81500, liabilities: 42800, equity: 38700 },
-                    { period: "Q3/24", revenue: 15654, grossProfit: 6210, netProfit: 2012, totalAssets: 84200, liabilities: 43900, equity: 40300 },
-                    { period: "Q4/24", revenue: 16225, grossProfit: 6470, netProfit: 2039, totalAssets: 86500, liabilities: 45000, equity: 41500 }
+                    { period: "Q2/25", revenue: 18100, grossProfit: 7200, netProfit: 2320, totalAssets: 92500, liabilities: 48000, equity: 44500 },
+                    { period: "Q3/25", revenue: 18450, grossProfit: 7350, netProfit: 2410, totalAssets: 95200, liabilities: 49200, equity: 46000 },
+                    { period: "Q4/25", revenue: 19500, grossProfit: 7800, netProfit: 2500, totalAssets: 98500, liabilities: 51000, equity: 47500 },
+                    { period: "Q1/26", revenue: 20200, grossProfit: 8100, netProfit: 2680, totalAssets: 101800, liabilities: 52500, equity: 49300 }
                 ]
             },
             ratios: {
-                pe: 23.5,
-                pb: 4.39,
-                eps: 5308,
-                bvps: 28420,
-                roe: 18.7,
-                roa: 8.9,
-                debtToEquity: 1.08
+                pe: 21.8,
+                pb: 4.15,
+                eps: 6335,
+                bvps: 32530,
+                roe: 19.5,
+                roa: 9.4,
+                debtToEquity: 1.07
             }
         },
         "VIX": {
@@ -3960,25 +3960,25 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             financials: {
                 yearly: [
-                    { period: "2021", revenue: 1576, grossProfit: 920, netProfit: 736, totalAssets: 9500, liabilities: 4100, equity: 5400 },
                     { period: "2022", revenue: 1187, grossProfit: 420, netProfit: 312, totalAssets: 8200, liabilities: 2800, equity: 5400 },
                     { period: "2023", revenue: 2014, grossProfit: 1250, netProfit: 966, totalAssets: 10800, liabilities: 1800, equity: 9000 },
-                    { period: "2024", revenue: 2250, grossProfit: 1350, netProfit: 1050, totalAssets: 12500, liabilities: 1600, equity: 10900 }
+                    { period: "2024", revenue: 2250, grossProfit: 1350, netProfit: 1050, totalAssets: 12500, liabilities: 1600, equity: 10900 },
+                    { period: "2025", revenue: 2650, grossProfit: 1620, netProfit: 1280, totalAssets: 14800, liabilities: 1900, equity: 12900 }
                 ],
                 quarterly: [
-                    { period: "Q1/24", revenue: 450, grossProfit: 250, netProfit: 180, totalAssets: 11200, liabilities: 1500, equity: 9700 },
-                    { period: "Q2/24", revenue: 650, grossProfit: 410, netProfit: 320, totalAssets: 11900, liabilities: 1600, equity: 10300 },
-                    { period: "Q3/24", revenue: 520, grossProfit: 310, netProfit: 245, totalAssets: 12100, liabilities: 1550, equity: 10550 },
-                    { period: "Q4/24", revenue: 630, grossProfit: 380, netProfit: 305, totalAssets: 12500, liabilities: 1600, equity: 10900 }
+                    { period: "Q2/25", revenue: 680, grossProfit: 420, netProfit: 330, totalAssets: 13200, liabilities: 1700, equity: 11500 },
+                    { period: "Q3/25", revenue: 610, grossProfit: 370, netProfit: 290, totalAssets: 13800, liabilities: 1850, equity: 11950 },
+                    { period: "Q4/25", revenue: 720, grossProfit: 440, netProfit: 350, totalAssets: 14800, liabilities: 1900, equity: 12900 },
+                    { period: "Q1/26", revenue: 750, grossProfit: 465, netProfit: 375, totalAssets: 15500, liabilities: 2050, equity: 13450 }
                 ]
             },
             ratios: {
-                pe: 11.9,
-                pb: 1.15,
-                eps: 720,
-                bvps: 7475,
-                roe: 9.6,
-                roa: 8.4,
+                pe: 10.8,
+                pb: 1.05,
+                eps: 878,
+                bvps: 8850,
+                roe: 10.5,
+                roa: 9.2,
                 debtToEquity: 0.15
             }
         },
@@ -4003,26 +4003,26 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             financials: {
                 yearly: [
-                    { period: "2021", revenue: 61012, grossProfit: 26310, netProfit: 10532, totalAssets: 53100, liabilities: 17400, equity: 35700 },
                     { period: "2022", revenue: 59956, grossProfit: 23980, netProfit: 8516, totalAssets: 48400, liabilities: 15600, equity: 32800 },
                     { period: "2023", revenue: 60370, grossProfit: 24590, netProfit: 9019, totalAssets: 52700, liabilities: 17100, equity: 35600 },
-                    { period: "2024", revenue: 61800, grossProfit: 25500, netProfit: 9550, totalAssets: 54900, liabilities: 17800, equity: 37100 }
+                    { period: "2024", revenue: 61800, grossProfit: 25500, netProfit: 9550, totalAssets: 54900, liabilities: 17800, equity: 37100 },
+                    { period: "2025", revenue: 64200, grossProfit: 26800, netProfit: 9850, totalAssets: 56500, liabilities: 18000, equity: 38500 }
                 ],
                 quarterly: [
-                    { period: "Q1/24", revenue: 14112, grossProfit: 5820, netProfit: 2202, totalAssets: 53200, liabilities: 17300, equity: 35900 },
-                    { period: "Q2/24", revenue: 16550, grossProfit: 6850, netProfit: 2562, totalAssets: 54100, liabilities: 17500, equity: 36600 },
-                    { period: "Q3/24", revenue: 15520, grossProfit: 6380, netProfit: 2410, totalAssets: 54300, liabilities: 17400, equity: 36900 },
-                    { period: "Q4/24", revenue: 15618, grossProfit: 6450, netProfit: 2376, totalAssets: 54900, liabilities: 17800, equity: 37100 }
+                    { period: "Q2/25", revenue: 16100, grossProfit: 6750, netProfit: 2480, totalAssets: 55400, liabilities: 17600, equity: 37800 },
+                    { period: "Q3/25", revenue: 16250, grossProfit: 6800, netProfit: 2510, totalAssets: 55900, liabilities: 17700, equity: 38200 },
+                    { period: "Q4/25", revenue: 16400, grossProfit: 6900, netProfit: 2490, totalAssets: 56500, liabilities: 18000, equity: 38500 },
+                    { period: "Q1/26", revenue: 15800, grossProfit: 6600, netProfit: 2320, totalAssets: 57200, liabilities: 18200, equity: 39000 }
                 ]
             },
             ratios: {
-                pe: 14.45,
-                pb: 3.72,
-                eps: 4570,
-                bvps: 17750,
-                roe: 25.7,
-                roa: 17.4,
-                debtToEquity: 0.48
+                pe: 14.1,
+                pb: 3.55,
+                eps: 4710,
+                bvps: 18420,
+                roe: 25.6,
+                roa: 17.5,
+                debtToEquity: 0.47
             }
         },
         "SSI": {
@@ -4046,26 +4046,26 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             financials: {
                 yearly: [
-                    { period: "2021", revenue: 7772, grossProfit: 3520, netProfit: 2695, totalAssets: 50800, liabilities: 36200, equity: 14600 },
                     { period: "2022", revenue: 6517, grossProfit: 2450, netProfit: 1684, totalAssets: 52200, liabilities: 30100, equity: 22100 },
                     { period: "2023", revenue: 7285, grossProfit: 2890, netProfit: 2173, totalAssets: 55400, liabilities: 32600, equity: 22800 },
-                    { period: "2024", revenue: 8500, grossProfit: 3600, netProfit: 2700, totalAssets: 62000, liabilities: 35000, equity: 27000 }
+                    { period: "2024", revenue: 8500, grossProfit: 3600, netProfit: 2700, totalAssets: 62000, liabilities: 35000, equity: 27000 },
+                    { period: "2025", revenue: 9800, grossProfit: 4100, netProfit: 3150, totalAssets: 68500, liabilities: 38000, equity: 30500 }
                 ],
                 quarterly: [
-                    { period: "Q1/24", revenue: 1950, grossProfit: 810, netProfit: 620, totalAssets: 57200, liabilities: 33500, equity: 23700 },
-                    { period: "Q2/24", revenue: 2310, grossProfit: 980, netProfit: 750, totalAssets: 59500, liabilities: 34800, equity: 24700 },
-                    { period: "Q3/24", revenue: 2040, grossProfit: 850, netProfit: 645, totalAssets: 60100, liabilities: 34700, equity: 25400 },
-                    { period: "Q4/24", revenue: 2200, grossProfit: 960, netProfit: 685, totalAssets: 62000, liabilities: 35000, equity: 27000 }
+                    { period: "Q2/25", revenue: 2450, grossProfit: 1020, netProfit: 790, totalAssets: 64500, liabilities: 36200, equity: 28300 },
+                    { period: "Q3/25", revenue: 2380, grossProfit: 990, netProfit: 760, totalAssets: 66200, liabilities: 36800, equity: 29400 },
+                    { period: "Q4/25", revenue: 2620, grossProfit: 1110, netProfit: 850, totalAssets: 68500, liabilities: 38000, equity: 30500 },
+                    { period: "Q1/26", revenue: 2750, grossProfit: 1180, netProfit: 920, totalAssets: 71200, liabilities: 39200, equity: 32000 }
                 ]
             },
             ratios: {
-                pe: 24.07,
-                pb: 2.41,
-                eps: 1378,
-                bvps: 13775,
-                roe: 10.0,
-                roa: 4.35,
-                debtToEquity: 1.3
+                pe: 22.1,
+                pb: 2.25,
+                eps: 1607,
+                bvps: 15560,
+                roe: 10.3,
+                roa: 4.6,
+                debtToEquity: 1.25
             }
         }
     };
@@ -4109,7 +4109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let curEquity = Math.round(bvps * (sharesOutstanding / 1000000));
         let curAssets = Math.round(curEquity * (1 + debtToEquity));
         
-        const years = [2024, 2023, 2022, 2021];
+        const years = [2025, 2024, 2023, 2022];
         years.forEach((yr, idx) => {
             const factor = 1 - (idx * (0.08 + Math.random() * 0.07));
             yearly.unshift({
@@ -4124,10 +4124,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const quarterly = [
-            { period: "Q1/24", revenue: Math.round(revenueLastYear * 0.22), grossProfit: Math.round(revenueLastYear * 0.22 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.21), totalAssets: curAssets, liabilities: Math.round(curAssets - curEquity), equity: curEquity },
-            { period: "Q2/24", revenue: Math.round(revenueLastYear * 0.25), grossProfit: Math.round(revenueLastYear * 0.25 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.24), totalAssets: curAssets, liabilities: Math.round(curAssets - curEquity), equity: curEquity },
-            { period: "Q3/24", revenue: Math.round(revenueLastYear * 0.24), grossProfit: Math.round(revenueLastYear * 0.24 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.26), totalAssets: curAssets, liabilities: Math.round(curAssets - curEquity), equity: curEquity },
-            { period: "Q4/24", revenue: Math.round(revenueLastYear * 0.29), grossProfit: Math.round(revenueLastYear * 0.29 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.29), totalAssets: curAssets, liabilities: Math.round(curAssets - curEquity), equity: curEquity }
+            { period: "Q2/25", revenue: Math.round(revenueLastYear * 0.23), grossProfit: Math.round(revenueLastYear * 0.23 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.22), totalAssets: Math.round(curAssets * 0.96), liabilities: Math.round(curAssets * 0.96 - curEquity * 0.96), equity: Math.round(curEquity * 0.96) },
+            { period: "Q3/25", revenue: Math.round(revenueLastYear * 0.24), grossProfit: Math.round(revenueLastYear * 0.24 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.23), totalAssets: Math.round(curAssets * 0.98), liabilities: Math.round(curAssets * 0.98 - curEquity * 0.98), equity: Math.round(curEquity * 0.98) },
+            { period: "Q4/25", revenue: Math.round(revenueLastYear * 0.28), grossProfit: Math.round(revenueLastYear * 0.28 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.27), totalAssets: curAssets, liabilities: Math.round(curAssets - curEquity), equity: curEquity },
+            { period: "Q1/26", revenue: Math.round(revenueLastYear * 0.26), grossProfit: Math.round(revenueLastYear * 0.26 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.25), totalAssets: Math.round(curAssets * 1.02), liabilities: Math.round(curAssets * 1.02 - curEquity * 1.02), equity: Math.round(curEquity * 1.02) }
         ];
 
         return {
@@ -4421,7 +4421,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             <span style="display:flex; align-items:center; gap:5px;"><span style="width:10px; height:10px; background:#10b981; display:inline-block; border-radius:2px;"></span> Lợi nhuận ròng</span>
                         </div>
                     </div>
-                    <div style="width: 100%; height: 220px; background: rgba(0,0,0,0.1); border-radius:8px;">
+                    <div style="width: 100%; height: auto; background: rgba(0,0,0,0.1); border-radius:8px; padding: 10px; box-sizing: border-box; display: flex; justify-content: center; align-items: center;">
                         ${drawFACalendarChart(data.financials, timeMode)}
                     </div>
                 </div>
