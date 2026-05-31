@@ -137,8 +137,11 @@ document.addEventListener("DOMContentLoaded", () => {
     views.forEach(v => {
         v.btn.addEventListener("click", (e) => {
             e.preventDefault();
+            // Clear active class from all nav-items (both TA and FA)
+            document.querySelectorAll(".nav-menu .nav-item").forEach(item => {
+                item.classList.remove("active");
+            });
             views.forEach(x => {
-                x.btn.classList.remove("active");
                 x.el.classList.add("hidden");
             });
             // Ẩn thêm fa-view-container khi chuyển sang các tab TA
@@ -147,6 +150,11 @@ document.addEventListener("DOMContentLoaded", () => {
             
             v.btn.classList.add("active");
             v.el.classList.remove("hidden");
+            
+            // Switch mode to TA
+            currentAnalysisMode = "ta";
+            const pageTitle = document.getElementById("page-title");
+            if (pageTitle) pageTitle.textContent = `Trực quan hóa & Phân tích Kỹ thuật - Mã ${currentTicker}`;
             
             // Resize chart if showing dashboard (Lightweight Charts requirement)
             if (v.el === dashboardView && chartInstance) {
@@ -4642,10 +4650,12 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
-    const btnModeTa = document.getElementById("btn-mode-ta");
-    const btnModeFa = document.getElementById("btn-mode-fa");
-    const taMenuItems = document.getElementById("ta-menu-items");
-    const faMenuItems = document.getElementById("fa-menu-items");
+    const headerTa = document.getElementById("header-ta");
+    const headerFa = document.getElementById("header-fa");
+    const groupTa = document.getElementById("group-ta");
+    const groupFa = document.getElementById("group-fa");
+    const taSubmenu = document.getElementById("ta-menu-items");
+    const faSubmenu = document.getElementById("fa-menu-items");
     
     const faViewContainer = document.getElementById("fa-view-container");
 
@@ -4661,41 +4671,46 @@ document.addEventListener("DOMContentLoaded", () => {
         menuItems.forEach(item => item.classList.remove("active"));
     }
 
-    if (btnModeTa && btnModeFa) {
-        btnModeTa.addEventListener("click", () => {
-            currentAnalysisMode = "ta";
-            btnModeTa.classList.add("active");
-            btnModeFa.classList.remove("active");
-            
-            taMenuItems.classList.remove("hidden");
-            faMenuItems.classList.add("hidden");
-
-            hideAllViews();
-            if (dashboardView) dashboardView.classList.remove("hidden");
-            const btnDashboard = document.getElementById("btn-dashboard");
-            if (btnDashboard) btnDashboard.classList.add("active");
-            const pageTitle = document.getElementById("page-title");
-            if (pageTitle) pageTitle.textContent = `Trực quan hóa & Phân tích Kỹ thuật - Mã ${currentTicker}`;
+    // Xử lý đóng/mở sơ đồ cây
+    if (headerTa && groupTa && taSubmenu) {
+        headerTa.addEventListener("click", () => {
+            const isExpanded = groupTa.classList.contains("expanded");
+            if (isExpanded) {
+                groupTa.classList.remove("expanded");
+                taSubmenu.classList.add("hidden");
+            } else {
+                groupTa.classList.add("expanded");
+                taSubmenu.classList.remove("hidden");
+                
+                // Tự động kích hoạt tab con đầu tiên của TA nếu chưa có tab nào hoạt động
+                const activeChild = document.querySelector(".nav-menu .nav-item.active");
+                const hasTaActive = Array.from(taSubmenu.querySelectorAll(".nav-item")).some(item => item.classList.contains("active"));
+                if (!activeChild || !hasTaActive) {
+                    const firstChild = document.getElementById("btn-dashboard");
+                    if (firstChild) firstChild.click();
+                }
+            }
         });
+    }
 
-        btnModeFa.addEventListener("click", () => {
-            currentAnalysisMode = "fa";
-            btnModeFa.classList.add("active");
-            btnModeTa.classList.remove("active");
-            
-            faMenuItems.classList.remove("hidden");
-            taMenuItems.classList.add("hidden");
-
-            currentFaTab = "overview";
-            hideAllViews();
-            if (faViewContainer) faViewContainer.classList.remove("hidden");
-            const btnFaOverview = document.getElementById("btn-fa-overview");
-            if (btnFaOverview) btnFaOverview.classList.add("active");
-            
-            const pageTitle = document.getElementById("page-title");
-            if (pageTitle) pageTitle.textContent = `Phân tích Doanh nghiệp & Định giá - Mã ${currentTicker}`;
-            
-            renderFAView();
+    if (headerFa && groupFa && faSubmenu) {
+        headerFa.addEventListener("click", () => {
+            const isExpanded = groupFa.classList.contains("expanded");
+            if (isExpanded) {
+                groupFa.classList.remove("expanded");
+                faSubmenu.classList.add("hidden");
+            } else {
+                groupFa.classList.add("expanded");
+                faSubmenu.classList.remove("hidden");
+                
+                // Tự động kích hoạt tab con đầu tiên của FA nếu chưa có tab nào hoạt động
+                const activeChild = document.querySelector(".nav-menu .nav-item.active");
+                const hasFaActive = Array.from(faSubmenu.querySelectorAll(".nav-item")).some(item => item.classList.contains("active"));
+                if (!activeChild || !hasFaActive) {
+                    const firstChild = document.getElementById("btn-fa-overview");
+                    if (firstChild) firstChild.click();
+                }
+            }
         });
     }
 
@@ -4708,11 +4723,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const faButtons = [faOverviewBtn, faPerformanceBtn, faBalanceBtn, faRatiosBtn, faValuationBtn];
 
     function activateFaMenu(activeBtn, tabName) {
-        faButtons.forEach(btn => {
-            if (btn) btn.classList.remove("active");
-        });
+        // Ẩn tất cả các view kỹ thuật và xóa class active của mọi tab con
+        hideAllViews();
+        
         if (activeBtn) activeBtn.classList.add("active");
         currentFaTab = tabName;
+        currentAnalysisMode = "fa";
+        
+        // Hiện vùng chứa FA
+        if (faViewContainer) faViewContainer.classList.remove("hidden");
+        
+        const pageTitle = document.getElementById("page-title");
+        if (pageTitle) pageTitle.textContent = `Phân tích Doanh nghiệp & Định giá - Mã ${currentTicker}`;
+        
         renderFAView();
     }
 
