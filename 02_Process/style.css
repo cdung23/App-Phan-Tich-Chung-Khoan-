@@ -2409,3 +2409,40 @@ body {
     line-height: 1.5 !important;
 }
 
+.lessons-sub-tabs {
+    display: flex !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    background: rgba(0, 0, 0, 0.15) !important;
+    padding: 6px 6px 0 6px !important;
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+}
+
+.sub-tab-btn {
+    flex: 1 !important;
+    padding: 12px 8px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    background: none !important;
+    color: var(--text-secondary) !important;
+    cursor: pointer !important;
+    border-bottom: 2px solid transparent !important;
+    transition: all 0.25s ease !important;
+    font-family: inherit !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.sub-tab-btn:hover {
+    color: var(--text-primary) !important;
+}
+
+.sub-tab-btn.active {
+    color: #3b82f6 !important;
+    border-bottom: 2px solid #3b82f6 !important;
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
+}
+

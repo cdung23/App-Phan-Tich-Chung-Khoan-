@@ -579,8 +579,13 @@
                 <div class="lessons-container" style="display: grid; grid-template-columns: 320px 1fr; gap: 20px; width: 100%; min-height: 600px;">
                     <!-- Cột bên trái: Danh sách bài học -->
                     <div class="lessons-sidebar-card card" style="display: flex; flex-direction: column; gap: 15px; height: 100%; max-height: 680px; overflow-y: auto;">
-                        <div class="card-header">
-                            <h2 class="card-title"><i class="fa-solid fa-graduation-cap"></i> Chủ đề dài hạn</h2>
+                        <div class="lessons-sub-tabs">
+                            <button id="btn-tab-ticker-lessons" class="sub-tab-btn active">
+                                <i class="fa-solid fa-chart-line"></i> Lịch sử <span id="lessons-ticker-label">VIX</span>
+                            </button>
+                            <button id="btn-tab-macro-lessons" class="sub-tab-btn">
+                                <i class="fa-solid fa-earth-asia"></i> Vĩ mô
+                            </button>
                         </div>
                         <div class="card-body" id="lessons-list" style="display: flex; flex-direction: column; gap: 12px; padding: 15px;">
                             <!-- Danh sách bài học được render động bằng JS -->

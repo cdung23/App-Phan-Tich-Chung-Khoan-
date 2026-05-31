@@ -293,6 +293,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const tickerElements = document.querySelectorAll(".ticker");
         tickerElements.forEach(el => el.textContent = currentTicker);
 
+        // Update lessons ticker label and history
+        const lessonsTickerLabel = document.getElementById("lessons-ticker-label");
+        if (lessonsTickerLabel) lessonsTickerLabel.textContent = currentTicker;
+        try {
+            analyzeTickerHistory();
+        } catch (err) {
+            console.error("Lỗi khi quét lịch sử bài học cho mã:", err);
+        }
+
         // Update Dashboard
         try {
             updateDashboardUI();
@@ -3402,12 +3411,268 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     ];
 
+    let currentLessonTab = "ticker";
+    let tickerHistoricalLessons = [];
+
+    function analyzeTickerHistory() {
+        if (!processedData || processedData.length < 60) {
+            tickerHistoricalLessons = [];
+            return;
+        }
+
+        const N = processedData.length;
+        let maxUptrendPct = -Infinity;
+        let bestUptrend = null; // { startIdx, endIdx, pct }
+
+        let maxDowntrendPct = -Infinity;
+        let bestDowntrend = null; // { startIdx, endIdx, pct }
+
+        // Tìm uptrend lớn nhất (hiệu suất tăng giá tối đa, khoảng cách tối thiểu 60 phiên)
+        for (let i = 0; i < N - 60; i++) {
+            for (let j = i + 60; j < N; j++) {
+                const startPrice = processedData[i].close;
+                const endPrice = processedData[j].close;
+                if (startPrice <= 0) continue;
+                const pct = (endPrice - startPrice) / startPrice;
+                if (pct > maxUptrendPct) {
+                    maxUptrendPct = pct;
+                    bestUptrend = { startIdx: i, endIdx: j, pct: pct };
+                }
+            }
+        }
+
+        // Tìm downtrend lớn nhất (sụt giảm phần trăm lớn nhất, khoảng cách tối thiểu 60 phiên)
+        for (let i = 0; i < N - 60; i++) {
+            for (let j = i + 60; j < N; j++) {
+                const startPrice = processedData[i].close;
+                const endPrice = processedData[j].close;
+                if (startPrice <= 0) continue;
+                const pct = (startPrice - endPrice) / startPrice;
+                if (pct > maxDowntrendPct) {
+                    maxDowntrendPct = pct;
+                    bestDowntrend = { startIdx: i, endIdx: j, pct: pct };
+                }
+            }
+        }
+
+        tickerHistoricalLessons = [];
+
+        if (bestUptrend) {
+            const startNode = processedData[bestUptrend.startIdx];
+            const endNode = processedData[bestUptrend.endIdx];
+            const subData = processedData.slice(bestUptrend.startIdx, bestUptrend.endIdx + 1);
+            const pctStr = (bestUptrend.pct * 100).toFixed(1).replace('.', ',');
+            
+            tickerHistoricalLessons.push({
+                id: `ticker-uptrend`,
+                tag: `Uptrend ${currentTicker}`,
+                tagClass: "uptrend",
+                title: `Chu kỳ tăng mạnh nhất ${currentTicker}: +${pctStr}%`,
+                period: `${startNode.dateStr} - ${endNode.dateStr}`,
+                context: `Trong giai đoạn này, cổ phiếu ${currentTicker} ghi nhận mức tăng trưởng vượt bậc từ ${formatMoney(startNode.close)} VNĐ lên ${formatMoney(endNode.close)} VNĐ (tăng +${pctStr}%). Đây là chu kỳ tăng dài hạn mạnh mẽ nhất trong lịch sử giao dịch gần đây của ${currentTicker}, chứng minh sức mạnh của dòng tiền tổ chức và nền tảng cơ bản vững chắc hỗ trợ đà tăng kéo dài.`,
+                signals: [
+                    {
+                        icon: "fa-chart-line",
+                        class: "up",
+                        title: "Duy trì vững vàng trên EMA50",
+                        desc: `Đường trung bình động EMA50 đóng vai trò là bệ đỡ vững chắc. Mỗi nhịp điều chỉnh kỹ thuật đưa giá về gần EMA50 đều kích hoạt dòng tiền gom hàng mạnh mẽ, duy trì đà tăng trung hạn ổn định.`
+                    },
+                    {
+                        icon: "fa-gauge-high",
+                        class: "up",
+                        title: "RSI nằm trong vùng xu hướng mạnh",
+                        desc: "RSI14 liên tục neo cao trong vùng từ 50 đến 75, thỉnh thoảng tiến vào vùng quá mua (>70) mà không có sự phân kỳ âm nguy hiểm, thể hiện xu hướng tăng đang có gia tốc mạnh mẽ."
+                    },
+                    {
+                        icon: "fa-database",
+                        class: "up",
+                        title: "Thanh khoản bùng nổ cùng hướng tăng",
+                        desc: "Khối lượng giao dịch bình quân trong chu kỳ tăng này cao gấp 1,5 - 2,5 lần so với các giai đoạn đi ngang trước đó, xác nhận dòng tiền lớn của cá mập đang dẫn dắt cuộc chơi."
+                    }
+                ],
+                takeaways: [
+                    "Ưu tiên mua gom khi cổ phiếu bứt phá mạnh qua kháng cự đi kèm thanh khoản lớn và đường giá chính thức vượt EMA50.",
+                    "Thực hiện nắm giữ chặt chẽ cổ phiếu trong xu hướng tăng, chỉ cân nhắc bán hạ tỷ trọng khi giá có tín hiệu phân phối mạnh hoặc thủng hẳn EMA50.",
+                    "Hạn chế bán chốt lời non chỉ vì các chỉ báo kỹ thuật rơi vào vùng quá mua ngắn hạn khi xu hướng tăng dài hạn chưa bị bẻ gãy."
+                ],
+                svg: generateDynamicSvg(subData, "uptrend")
+            });
+        }
+
+        if (bestDowntrend) {
+            const startNode = processedData[bestDowntrend.startIdx];
+            const endNode = processedData[bestDowntrend.endIdx];
+            const subData = processedData.slice(bestDowntrend.startIdx, bestDowntrend.endIdx + 1);
+            const pctStr = (bestDowntrend.pct * 100).toFixed(1).replace('.', ',');
+            
+            tickerHistoricalLessons.push({
+                id: `ticker-downtrend`,
+                tag: `Downtrend ${currentTicker}`,
+                tagClass: "downtrend",
+                title: `Chu kỳ giảm sâu nhất ${currentTicker}: -${pctStr}%`,
+                period: `${startNode.dateStr} - ${endNode.dateStr}`,
+                context: `Trong giai đoạn này, cổ phiếu ${currentTicker} sụt giảm khốc liệt từ ${formatMoney(startNode.close)} VNĐ về còn ${formatMoney(endNode.close)} VNĐ (giảm -${pctStr}%). Đây là bài học đắt giá về rủi ro sụt giảm mạnh khi cổ phiếu chính thức kết thúc chu kỳ tăng trưởng, gãy các mốc hỗ trợ cứng và rơi vào xu hướng giảm kéo dài dưới áp lực chốt lời lớn hoặc các yếu tố vĩ mô bất lợi.`,
+                signals: [
+                    {
+                        icon: "fa-arrow-trend-down",
+                        class: "down",
+                        title: "Giá gãy EMA50 và liên tục bị kháng cự đè nặng",
+                        desc: `Giá cổ phiếu bắt đầu chu kỳ giảm khi cắt xuống dưới EMA50 với khối lượng lớn. Trong suốt giai đoạn giảm, EMA50 trở thành đường kháng cự động cực kỳ mạnh mẽ, chặn đứng mọi nhịp hồi phục ngắn hạn.`
+                    },
+                    {
+                        icon: "fa-skull-crossbones",
+                        class: "down",
+                        title: "Cạm bẫy hồi giả kỹ thuật (Bull Trap)",
+                        desc: "Xen kẽ giữa các phiên giảm sàn là những phiên hồi kỹ thuật với thanh khoản thấp, kích thích lòng tham bắt đáy của nhỏ lẻ trước khi tiếp tục chu kỳ giảm sâu hơn và thiết lập đáy mới."
+                    },
+                    {
+                        icon: "fa-circle-exclamation",
+                        class: "warn",
+                        title: "RSI quá bán kéo dài nhưng giá vẫn giảm",
+                        desc: "RSI14 duy trì dưới 30 trong thời gian dài (trạng thái quá bán cực độ). Nhiều nhà đầu tư mua bắt đáy do cho rằng giá đã rẻ nhưng bị thua lỗ nặng do áp lực bán giải chấp tài khoản (Margin Call)."
+                    }
+                ],
+                takeaways: [
+                    "Tuyệt đối tuân thủ kỷ luật cắt lỗ (5% - 7%) ngay khi giá cổ phiếu phá vỡ các vùng nền hỗ trợ quan trọng hoặc cắt xuống EMA50.",
+                    "Không trung bình giá xuống đối với cổ phiếu đang trong xu hướng downtrend dài hạn, vì không thể biết đâu là đáy thực sự.",
+                    "Chỉ tham gia mua lại khi cổ phiếu hoàn thành quá trình tạo đáy trung hạn (ví dụ mẫu hình 2 đáy, vai đầu vai ngược) và vượt thành công lên trên EMA50."
+                ],
+                svg: generateDynamicSvg(subData, "downtrend")
+            });
+        }
+    }
+
+    function generateDynamicSvg(subData, type) {
+        if (!subData || subData.length === 0) return "";
+        const N = subData.length;
+
+        let maxPrice = -Infinity;
+        let minPrice = Infinity;
+        subData.forEach(d => {
+            if (d.close > maxPrice) maxPrice = d.close;
+            if (d.close < minPrice) minPrice = d.close;
+            if (d.ema50 && d.ema50 > maxPrice) maxPrice = d.ema50;
+            if (d.ema50 && d.ema50 < minPrice) minPrice = d.ema50;
+        });
+
+        const priceDiff = maxPrice - minPrice;
+        const padding = priceDiff > 0 ? priceDiff * 0.08 : 1000;
+        const scaleMin = minPrice - padding;
+        const scaleMax = maxPrice + padding;
+        const diff = scaleMax - scaleMin > 0 ? scaleMax - scaleMin : 1;
+
+        // Vẽ đường giá đóng cửa
+        let pricePoints = [];
+        subData.forEach((d, k) => {
+            const x = N > 1 ? (50 + (k / (N - 1)) * 500) : 300;
+            const yClose = 180 - ((d.close - scaleMin) / diff) * 140;
+            pricePoints.push(`${k === 0 ? 'M' : 'L'} ${x.toFixed(1)},${yClose.toFixed(1)}`);
+        });
+        const pricePath = pricePoints.join(" ");
+
+        // Vẽ đường EMA50 (nếu có)
+        let emaPoints = [];
+        subData.forEach((d, k) => {
+            if (d.ema50 !== undefined && d.ema50 !== null) {
+                const x = N > 1 ? (50 + (k / (N - 1)) * 500) : 300;
+                const yEma = 180 - ((d.ema50 - scaleMin) / diff) * 140;
+                emaPoints.push(`${emaPoints.length === 0 ? 'M' : 'L'} ${x.toFixed(1)},${yEma.toFixed(1)}`);
+            }
+        });
+        const emaPath = emaPoints.join(" ");
+
+        // Tìm đỉnh và đáy thực tế để vẽ label
+        let peakIdx = 0;
+        let valleyIdx = 0;
+        let peakPrice = -Infinity;
+        let valleyPrice = Infinity;
+        subData.forEach((d, k) => {
+            if (d.close > peakPrice) {
+                peakPrice = d.close;
+                peakIdx = k;
+            }
+            if (d.close < valleyPrice) {
+                valleyPrice = d.close;
+                valleyIdx = k;
+            }
+        });
+
+        const peakX = N > 1 ? (50 + (peakIdx / (N - 1)) * 500) : 300;
+        const peakY = 180 - ((peakPrice - scaleMin) / diff) * 140;
+
+        const valleyX = N > 1 ? (50 + (valleyIdx / (N - 1)) * 500) : 300;
+        const valleyY = 180 - ((valleyPrice - scaleMin) / diff) * 140;
+
+        let peakLabelY = peakY - 25;
+        if (peakLabelY < 10) peakLabelY = peakY + 15;
+        
+        let valleyLabelY = valleyY + 8;
+        if (valleyLabelY > 200) valleyLabelY = valleyY - 25;
+
+        let peakRectX = peakX - 50;
+        if (peakRectX < 5) peakRectX = 5;
+        if (peakRectX > 495) peakRectX = 495;
+
+        let valleyRectX = valleyX - 50;
+        if (valleyRectX < 5) valleyRectX = 5;
+        if (valleyRectX > 495) valleyRectX = 495;
+
+        return `
+        <svg viewBox="0 0 600 220" class="lesson-schema-svg">
+            <!-- Grid Lines -->
+            <line x1="0" y1="40" x2="600" y2="40" class="schema-grid-line" />
+            <line x1="0" y1="90" x2="600" y2="90" class="schema-grid-line" />
+            <line x1="0" y1="140" x2="600" y2="140" class="schema-grid-line" />
+            <line x1="0" y1="190" x2="600" y2="190" class="schema-grid-line" />
+            
+            <!-- EMA50 line -->
+            ${emaPath ? `<path d="${emaPath}" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3" fill="none" opacity="0.75" />` : ''}
+            ${emaPath ? `<text x="50" y="30" fill="#f59e0b" font-size="8" opacity="0.8">-- Đường trung bình EMA50 thực tế</text>` : ''}
+            
+            <!-- Price Line -->
+            <path d="${pricePath}" class="schema-price-line" stroke="${type === 'uptrend' ? '#10b981' : '#ef4444'}" fill="none" stroke-width="2" />
+            
+            <!-- Highlight Points -->
+            <!-- Peak -->
+            <circle cx="${peakX.toFixed(1)}" cy="${peakY.toFixed(1)}" r="5" class="schema-point" fill="#ef4444" />
+            <rect x="${peakRectX.toFixed(1)}" y="${peakLabelY.toFixed(1)}" width="100" height="18" rx="3" class="schema-label-rect" stroke="#ef4444" />
+            <text x="${(peakRectX + 50).toFixed(1)}" y="${(peakLabelY + 12).toFixed(1)}" fill="#ef4444" class="schema-label-text" text-anchor="middle">Đỉnh: ${formatMoney(peakPrice)}</text>
+            
+            <!-- Valley -->
+            <circle cx="${valleyX.toFixed(1)}" cy="${valleyY.toFixed(1)}" r="5" class="schema-point" fill="#10b981" />
+            <rect x="${valleyRectX.toFixed(1)}" y="${valleyLabelY.toFixed(1)}" width="100" height="18" rx="3" class="schema-label-rect" stroke="#10b981" />
+            <text x="${(valleyRectX + 50).toFixed(1)}" y="${(valleyLabelY + 12).toFixed(1)}" fill="#10b981" class="schema-label-text" text-anchor="middle">Đáy: ${formatMoney(valleyPrice)}</text>
+        </svg>
+        `;
+    }
+
     function renderLessonsList() {
         const lessonsList = document.getElementById("lessons-list");
         if (!lessonsList) return;
         
         let htmlStr = "";
-        historicalLessons.forEach(lesson => {
+        const listToRender = currentLessonTab === "ticker" ? tickerHistoricalLessons : historicalLessons;
+        
+        if (listToRender.length === 0) {
+            htmlStr = `
+            <div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 13px;">
+                <i class="fa-solid fa-folder-open" style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+                Chưa có dữ liệu bài học cho mã ${currentTicker}
+            </div>
+            `;
+            lessonsList.innerHTML = htmlStr;
+            const detailContainer = document.getElementById("lesson-detail");
+            if (detailContainer) {
+                detailContainer.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                    Hãy tìm kiếm mã cổ phiếu hợp lệ để tải dữ liệu lịch sử và tự động đúc kết bài học.
+                </div>
+                `;
+            }
+            return;
+        }
+
+        listToRender.forEach(lesson => {
             htmlStr += `
             <button class="lesson-item-btn" data-id="${lesson.id}">
                 <span class="lesson-tag ${lesson.tagClass}">${lesson.tag}</span>
@@ -3432,7 +3697,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function showLessonDetail(lessonId) {
-        const lesson = historicalLessons.find(l => l.id === lessonId);
+        const listToSearch = currentLessonTab === "ticker" ? tickerHistoricalLessons : historicalLessons;
+        const lesson = listToSearch.find(l => l.id === lessonId);
         const detailContainer = document.getElementById("lesson-detail");
         if (!lesson || !detailContainer) return;
         
@@ -3470,7 +3736,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 <!-- Đồ họa trực quan (SVG) -->
                 <div>
-                    <div class="signals-sub-title"><i class="fa-solid fa-diagram-project"></i> Sơ đồ kỹ thuật mô phỏng chu kỳ</div>
+                    <div class="signals-sub-title"><i class="fa-solid fa-diagram-project"></i> Sơ đồ kỹ thuật chu kỳ</div>
                     <div class="lesson-schema-container">
                         ${lesson.svg}
                     </div>
@@ -3495,9 +3761,53 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
+    // Gắn sự kiện chuyển tab bài học (Sub-tabs)
+    const tabTickerBtn = document.getElementById("btn-tab-ticker-lessons");
+    const tabMacroBtn = document.getElementById("btn-tab-macro-lessons");
+
+    if (tabTickerBtn && tabMacroBtn) {
+        tabTickerBtn.addEventListener("click", () => {
+            currentLessonTab = "ticker";
+            tabTickerBtn.classList.add("active");
+            tabMacroBtn.classList.remove("active");
+            renderLessonsList();
+            
+            // Tự động chọn bài học đầu tiên
+            const firstBtn = document.querySelector("#lessons-list .lesson-item-btn");
+            if (firstBtn) {
+                firstBtn.classList.add("active");
+                const firstId = firstBtn.getAttribute("data-id");
+                showLessonDetail(firstId);
+            }
+        });
+
+        tabMacroBtn.addEventListener("click", () => {
+            currentLessonTab = "macro";
+            tabMacroBtn.classList.add("active");
+            tabTickerBtn.classList.remove("active");
+            renderLessonsList();
+            
+            // Tự động chọn bài học đầu tiên
+            const firstBtn = document.querySelector("#lessons-list .lesson-item-btn");
+            if (firstBtn) {
+                firstBtn.classList.add("active");
+                const firstId = firstBtn.getAttribute("data-id");
+                showLessonDetail(firstId);
+            }
+        });
+    }
+
     // Lắng nghe click vào nút Bài học lịch sử trên Sidebar để render danh sách lần đầu tiên
     if (btnLessons) {
         btnLessons.addEventListener("click", () => {
+            // Đảm bảo tab tiêu đề nhãn được cập nhật chính xác
+            const lessonsTickerLabel = document.getElementById("lessons-ticker-label");
+            if (lessonsTickerLabel) lessonsTickerLabel.textContent = currentTicker;
+            
+            // Quét lịch sử giá
+            analyzeTickerHistory();
+            
+            // Render danh sách
             renderLessonsList();
             
             // Chọn bài học đầu tiên làm mặc định nếu chưa chọn cái nào
