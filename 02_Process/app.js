@@ -3903,6 +3903,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     { period: "2025", revenue: 154800, grossProfit: 24800, netProfit: 13200, totalAssets: 215000, liabilities: 92000, equity: 123000 }
                 ],
                 quarterly: [
+                    { period: "Q1/24", revenue: 31100, grossProfit: 4100, netProfit: 2870, totalAssets: 195000, liabilities: 89000, equity: 106000 },
+                    { period: "Q2/24", revenue: 39600, grossProfit: 5300, netProfit: 3320, totalAssets: 202000, liabilities: 92000, equity: 110000 },
+                    { period: "Q3/24", revenue: 34000, grossProfit: 4800, netProfit: 3050, totalAssets: 205000, liabilities: 93000, equity: 112000 },
                     { period: "Q4/24", revenue: 35100, grossProfit: 5200, netProfit: 2970, totalAssets: 208500, liabilities: 95500, equity: 113000 },
                     { period: "Q1/25", revenue: 36200, grossProfit: 5400, netProfit: 3050, totalAssets: 209200, liabilities: 94800, equity: 114400 },
                     { period: "Q2/25", revenue: 38500, grossProfit: 5800, netProfit: 3320, totalAssets: 210000, liabilities: 93000, equity: 117000 },
@@ -3950,6 +3953,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     { period: "2025", revenue: 72500, grossProfit: 28800, netProfit: 9250, totalAssets: 98500, liabilities: 51000, equity: 47500 }
                 ],
                 quarterly: [
+                    { period: "Q1/24", revenue: 14000, grossProfit: 5500, netProfit: 1800, totalAssets: 78000, liabilities: 41000, equity: 37000 },
+                    { period: "Q2/24", revenue: 15200, grossProfit: 6000, netProfit: 1950, totalAssets: 81000, liabilities: 42000, equity: 39000 },
+                    { period: "Q3/24", revenue: 15500, grossProfit: 6150, netProfit: 2050, totalAssets: 83500, liabilities: 43200, equity: 40300 },
                     { period: "Q4/24", revenue: 16800, grossProfit: 6650, netProfit: 2150, totalAssets: 86500, liabilities: 45000, equity: 41500 },
                     { period: "Q1/25", revenue: 17200, grossProfit: 6850, netProfit: 2210, totalAssets: 89000, liabilities: 46200, equity: 42800 },
                     { period: "Q2/25", revenue: 18100, grossProfit: 7200, netProfit: 2320, totalAssets: 92500, liabilities: 48000, equity: 44500 },
@@ -3997,6 +4003,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     { period: "2025", revenue: 2650, grossProfit: 1620, netProfit: 1280, totalAssets: 14800, liabilities: 1900, equity: 12900 }
                 ],
                 quarterly: [
+                    { period: "Q1/24", revenue: 450, grossProfit: 260, netProfit: 200, totalAssets: 11200, liabilities: 1800, equity: 9400 },
+                    { period: "Q2/24", revenue: 520, grossProfit: 300, netProfit: 230, totalAssets: 11800, liabilities: 1700, equity: 10100 },
+                    { period: "Q3/24", revenue: 490, grossProfit: 280, netProfit: 215, totalAssets: 12100, liabilities: 1650, equity: 10450 },
                     { period: "Q4/24", revenue: 580, grossProfit: 340, netProfit: 260, totalAssets: 12500, liabilities: 1600, equity: 10900 },
                     { period: "Q1/25", revenue: 620, grossProfit: 380, netProfit: 295, totalAssets: 12800, liabilities: 1650, equity: 11150 },
                     { period: "Q2/25", revenue: 680, grossProfit: 420, netProfit: 330, totalAssets: 13200, liabilities: 1700, equity: 11500 },
@@ -4044,6 +4053,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     { period: "2025", revenue: 64200, grossProfit: 26800, netProfit: 9850, totalAssets: 56500, liabilities: 18000, equity: 38500 }
                 ],
                 quarterly: [
+                    { period: "Q1/24", revenue: 14100, grossProfit: 5800, netProfit: 2050, totalAssets: 53200, liabilities: 16800, equity: 36400 },
+                    { period: "Q2/24", revenue: 15200, grossProfit: 6300, netProfit: 2280, totalAssets: 53800, liabilities: 17100, equity: 36700 },
+                    { period: "Q3/24", revenue: 15000, grossProfit: 6200, netProfit: 2220, totalAssets: 54200, liabilities: 17300, equity: 36900 },
                     { period: "Q4/24", revenue: 15600, grossProfit: 6450, netProfit: 2280, totalAssets: 54900, liabilities: 17800, equity: 37100 },
                     { period: "Q1/25", revenue: 15400, grossProfit: 6380, netProfit: 2250, totalAssets: 55100, liabilities: 17500, equity: 37600 },
                     { period: "Q2/25", revenue: 16100, grossProfit: 6750, netProfit: 2480, totalAssets: 55400, liabilities: 17600, equity: 37800 },
@@ -4091,6 +4103,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     { period: "2025", revenue: 9800, grossProfit: 4100, netProfit: 3150, totalAssets: 68500, liabilities: 38000, equity: 30500 }
                 ],
                 quarterly: [
+                    { period: "Q1/24", revenue: 1980, grossProfit: 800, netProfit: 610, totalAssets: 56800, liabilities: 31200, equity: 25600 },
+                    { period: "Q2/24", revenue: 2150, grossProfit: 890, netProfit: 680, totalAssets: 58500, liabilities: 32400, equity: 26100 },
+                    { period: "Q3/24", revenue: 2050, grossProfit: 840, netProfit: 640, totalAssets: 60200, liabilities: 33800, equity: 26400 },
                     { period: "Q4/24", revenue: 2280, grossProfit: 950, netProfit: 710, totalAssets: 62000, liabilities: 35000, equity: 27000 },
                     { period: "Q1/25", revenue: 2320, grossProfit: 980, netProfit: 730, totalAssets: 63200, liabilities: 35400, equity: 27800 },
                     { period: "Q2/25", revenue: 2450, grossProfit: 1020, netProfit: 790, totalAssets: 64500, liabilities: 36200, equity: 28300 },
@@ -4167,7 +4182,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const quarterly = [
-            { period: "Q4/24", revenue: Math.round(revenueLastYear * 0.22), grossProfit: Math.round(revenueLastYear * 0.22 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.21), totalAssets: Math.round(curAssets * 0.94), liabilities: Math.round(curAssets * 0.94 - curEquity * 0.94), equity: Math.round(curEquity * 0.94) },
+            { period: "Q1/24", revenue: Math.round(revenueLastYear * 0.21), grossProfit: Math.round(revenueLastYear * 0.21 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.20), totalAssets: Math.round(curAssets * 0.90), liabilities: Math.round(curAssets * 0.90 - curEquity * 0.90), equity: Math.round(curEquity * 0.90) },
+            { period: "Q2/24", revenue: Math.round(revenueLastYear * 0.22), grossProfit: Math.round(revenueLastYear * 0.22 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.21), totalAssets: Math.round(curAssets * 0.92), liabilities: Math.round(curAssets * 0.92 - curEquity * 0.92), equity: Math.round(curEquity * 0.92) },
+            { period: "Q3/24", revenue: Math.round(revenueLastYear * 0.23), grossProfit: Math.round(revenueLastYear * 0.23 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.22), totalAssets: Math.round(curAssets * 0.93), liabilities: Math.round(curAssets * 0.93 - curEquity * 0.93), equity: Math.round(curEquity * 0.93) },
+            { period: "Q4/24", revenue: Math.round(revenueLastYear * 0.24), grossProfit: Math.round(revenueLastYear * 0.24 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.23), totalAssets: Math.round(curAssets * 0.94), liabilities: Math.round(curAssets * 0.94 - curEquity * 0.94), equity: Math.round(curEquity * 0.94) },
             { period: "Q1/25", revenue: Math.round(revenueLastYear * 0.23), grossProfit: Math.round(revenueLastYear * 0.23 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.22), totalAssets: Math.round(curAssets * 0.96), liabilities: Math.round(curAssets * 0.96 - curEquity * 0.96), equity: Math.round(curEquity * 0.96) },
             { period: "Q2/25", revenue: Math.round(revenueLastYear * 0.24), grossProfit: Math.round(revenueLastYear * 0.24 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.23), totalAssets: Math.round(curAssets * 0.98), liabilities: Math.round(curAssets * 0.98 - curEquity * 0.98), equity: Math.round(curEquity * 0.98) },
             { period: "Q3/25", revenue: Math.round(revenueLastYear * 0.25), grossProfit: Math.round(revenueLastYear * 0.25 * (netMargin + 0.1)), netProfit: Math.round(netProfitLastYear * 0.24), totalAssets: Math.round(curAssets * 0.99), liabilities: Math.round(curAssets * 0.99 - curEquity * 0.99), equity: Math.round(curEquity * 0.99) },
@@ -4212,9 +4230,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function drawFACalendarChart(financials, type = "yearly") {
         const dataList = type === "yearly" ? financials.yearly : financials.quarterly;
-        if (!dataList || dataList.length < 6) return "";
+        if (!dataList || dataList.length === 0) return "";
 
-        const drawList = dataList.slice(1); // 5 kỳ hiển thị
+        const isYearly = type === "yearly";
+        const sliceIdx = isYearly ? 1 : 4;
+        
+        if (dataList.length < (isYearly ? 6 : 9)) return "";
+
+        const drawList = dataList.slice(sliceIdx); // 5 kỳ hiển thị
         const W = 600;
         const H = 250;
         const paddingLeft = 55;
@@ -4231,11 +4254,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (maxVal <= 0) maxVal = 1000;
         maxVal = maxVal * 1.15;
 
-        // 2. Tính toán tăng trưởng LNST cho 5 kỳ hiển thị so với kỳ cơ sở đứng trước
+        // 2. Tính toán tăng trưởng LNST cho 5 kỳ hiển thị
         const growths = [];
-        for (let i = 1; i < dataList.length; i++) {
-            const prev = dataList[i-1].netProfit;
+        for (let i = sliceIdx; i < dataList.length; i++) {
             const cur = dataList[i].netProfit;
+            // Nếu là Năm: so sánh kỳ liền trước (i-1). Nếu là Quý: so sánh cùng kỳ năm trước (i-4)
+            const prevIdx = isYearly ? i - 1 : i - 4;
+            const prev = dataList[prevIdx].netProfit;
             const g = prev === 0 ? 0 : ((cur - prev) / Math.abs(prev)) * 100;
             growths.push(g);
         }
@@ -4523,8 +4548,10 @@ document.addEventListener("DOMContentLoaded", () => {
         let trHtml = "";
         const dataList = timeMode === "yearly" ? data.financials.yearly : data.financials.quarterly;
         
-        // Bỏ qua kỳ cơ sở ở index 0
-        for (let i = 1; i < dataList.length; i++) {
+        const isYearly = timeMode === "yearly";
+        const startIdx = isYearly ? 1 : 4;
+        
+        for (let i = startIdx; i < dataList.length; i++) {
             const d = dataList[i];
             const margin = d.revenue === 0 ? "0" : ((d.netProfit / d.revenue) * 100).toFixed(1).replace(".", ",");
             trHtml += `
@@ -4598,8 +4625,10 @@ document.addEventListener("DOMContentLoaded", () => {
         let trHtml = "";
         const dataList = timeMode === "yearly" ? data.financials.yearly : data.financials.quarterly;
 
-        // Bỏ qua kỳ cơ sở ở index 0
-        for (let i = 1; i < dataList.length; i++) {
+        const isYearly = timeMode === "yearly";
+        const startIdx = isYearly ? 1 : 4;
+
+        for (let i = startIdx; i < dataList.length; i++) {
             const d = dataList[i];
             const assets = d.totalAssets || 0;
             const liabilities = d.liabilities || 0;
