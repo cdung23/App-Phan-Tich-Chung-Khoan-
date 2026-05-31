@@ -90,10 +90,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnSignals = document.getElementById("btn-signals");
     const btnScreener = document.getElementById("btn-screener");
     const btnHistory = document.getElementById("btn-history");
+    const btnLessons = document.getElementById("btn-lessons");
     const dashboardView = document.getElementById("dashboard-view");
     const signalsView = document.getElementById("signals-view");
     const screenerView = document.getElementById("screener-view");
     const historyView = document.getElementById("history-view");
+    const lessonsView = document.getElementById("lessons-view");
 
     // Indicator Elements (in Signals View)
     const indicatorSmaStatus = document.getElementById("indicator-sma-status");
@@ -128,7 +130,8 @@ document.addEventListener("DOMContentLoaded", () => {
         { btn: btnDashboard, el: dashboardView },
         { btn: btnSignals, el: signalsView },
         { btn: btnScreener, el: screenerView },
-        { btn: btnHistory, el: historyView }
+        { btn: btnHistory, el: historyView },
+        { btn: btnLessons, el: lessonsView }
     ];
 
     views.forEach(v => {
@@ -3101,6 +3104,412 @@ document.addEventListener("DOMContentLoaded", () => {
             intradayPanel.classList.add("hidden");
             const chartContainer = document.getElementById("chart-container");
             if (chartContainer) chartContainer.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    // --- DỮ LIỆU BÀI HỌC LỊCH SỬ CHỨNG KHOÁN ---
+    const historicalLessons = [
+        {
+            id: "downtrend-2022",
+            tag: "Downtrend",
+            tagClass: "downtrend",
+            title: "Downtrend Lịch Sử 2022: Quản trị rủi ro & Bài học Cắt lỗ",
+            period: "Tháng 04/2022 - Tháng 11/2022",
+            context: "VN-Index lập đỉnh lịch sử quanh 1.535 điểm vào đầu tháng 4/2022 sau gần 2 năm Uptrend kỷ lục nhờ làn sóng nhà đầu tư mới (F0) và lãi suất cực thấp. Tuy nhiên, các chính sách thắt chặt tiền tệ toàn cầu, lạm phát và xử lý sai phạm thị trường đã châm ngòi cho đợt giảm giá khốc liệt nhất lịch sử, đưa chỉ số về vùng 873 điểm vào tháng 11/2022.",
+            signals: [
+                {
+                    icon: "fa-arrow-trend-down",
+                    class: "down",
+                    title: "Gãy đường xu hướng dài hạn (SMA 200 ngày)",
+                    desc: "Đường SMA 200 được xem là xương sống xu hướng dài hạn. Khi giá VN-Index xuyên thủng đường này và đường này bắt đầu dốc xuống, đó là tín hiệu xác nhận chu kỳ Uptrend 2 năm đã kết thúc và thị trường chính thức bước vào Downtrend dài hạn."
+                },
+                {
+                    icon: "fa-circle-exclamation",
+                    class: "warn",
+                    title: "Hiện tượng Phân kỳ âm RSI trên đồ thị Tuần",
+                    desc: "Tại vùng đỉnh 1.500+ điểm của năm 2022, trong khi chỉ số liên tục tạo các đỉnh giá đi ngang hoặc cao hơn, chỉ số động lượng RSI trên khung tuần lại liên tục tạo các đỉnh thấp hơn. Đây là tín hiệu cảnh báo lực mua của dòng tiền lớn đã cạn kiệt, chỉ còn sự hưng phấn ảo từ nhỏ lẻ."
+                },
+                {
+                    icon: "fa-bars-staggered",
+                    class: "down",
+                    title: "Giao cắt tử thần (Death Cross)",
+                    desc: "Đường trung bình ngắn hạn (SMA 50) cắt xuống dưới đường dài hạn (SMA 200). Đây là tín hiệu kích hoạt đà bán tháo kỹ thuật trên diện rộng của các quỹ lớn và hệ thống giao dịch tự động."
+                },
+                {
+                    icon: "fa-chart-simple",
+                    class: "warn",
+                    title: "Hiện tượng 'Phân phối đỉnh' với Vol cực lớn",
+                    desc: "Xuất hiện liên tục các phiên giảm điểm mạnh với khối lượng giao dịch kỷ lục, giá đóng cửa ở mức thấp nhất ngày. Đây là dấu vết dòng tiền lớn (Cá mập) âm thầm thoát hàng sang tay nhà đầu tư cá nhân."
+                }
+            ],
+            takeaways: [
+                "Tuân thủ tuyệt đối quy tắc cắt lỗ 7% - 8% từ điểm mua gốc để tránh các khoản lỗ sâu không thể hồi phục.",
+                "Tuyệt đối không trung bình giá xuống trên một xu hướng giảm dài hạn (Downtrend) vì đáy của hôm nay có thể là đỉnh của ngày mai.",
+                "Bảo toàn vốn và giữ tỷ trọng tiền mặt cao khi các đường xu hướng lớn (SMA 200) bị gãy."
+            ],
+            svg: `
+            <svg viewBox="0 0 600 220" class="lesson-schema-svg">
+                <!-- Grid Lines -->
+                <line x1="0" y1="40" x2="600" y2="40" class="schema-grid-line" />
+                <line x1="0" y1="90" x2="600" y2="90" class="schema-grid-line" />
+                <line x1="0" y1="140" x2="600" y2="140" class="schema-grid-line" />
+                <line x1="0" y1="190" x2="600" y2="190" class="schema-grid-line" />
+                
+                <!-- SMA 200 Line (Dốc xuống) -->
+                <path d="M 50,70 Q 200,60 300,95 T 550,170" class="schema-indicator-line" stroke="#a855f7" />
+                <text x="50" y="60" fill="#a855f7" font-size="9">SMA(200) Dốc xuống</text>
+                
+                <!-- SMA 50 Line (Cắt xuống SMA 200) -->
+                <path d="M 50,55 Q 200,45 310,105 T 550,195" class="schema-indicator-line" stroke="#3b82f6" />
+                <text x="50" y="45" fill="#3b82f6" font-size="9">SMA(50)</text>
+                
+                <!-- Price Line (Đường giá cắm đầu) -->
+                <path d="M 50,50 L 120,45 L 180,60 L 220,40 L 260,75 L 300,90 L 330,120 L 380,110 L 440,165 L 480,150 L 550,200" class="schema-price-line" stroke="#ef4444" />
+                
+                <!-- Highlight Points -->
+                <!-- Peak 1535 -->
+                <circle cx="220" cy="40" r="5" class="schema-point" fill="#ef4444" />
+                <rect x="180" y="10" width="80" height="18" rx="3" class="schema-label-rect" stroke="#ef4444" />
+                <text x="220" y="22" fill="#ef4444" class="schema-label-text" text-anchor="middle">Đỉnh 1.535đ</text>
+                
+                <!-- Death Cross Point -->
+                <circle cx="300" cy="98" r="5" class="schema-point" fill="#f59e0b" />
+                <rect x="250" y="115" width="100" height="18" rx="3" class="schema-label-rect" stroke="#f59e0b" />
+                <text x="300" y="127" fill="#f59e0b" class="schema-label-text" text-anchor="middle">Death Cross (Gãy SMA200)</text>
+                
+                <!-- Downtrend Panic Sell -->
+                <circle cx="440" cy="165" r="5" class="schema-point" fill="#ef4444" />
+                <text x="450" y="170" fill="#ef4444" font-size="9" font-weight="bold">Hoảng loạn / Giải chấp</text>
+            </svg>
+            `
+        },
+        {
+            id: "uptrend-2020",
+            tag: "Uptrend",
+            tagClass: "uptrend",
+            title: "Uptrend Siêu Sóng 2020-2021: Chu kỳ bơm tiền & Kỹ năng Gồng lãi",
+            period: "Tháng 04/2020 - Tháng 01/2022",
+            context: "Sau cú sụt giảm mạnh về 650 điểm vào tháng 3/2020 do bùng phát dịch COVID-19, ngân hàng nhà nước liên tục hạ lãi suất để kích thích kinh tế. Nguồn tiền rẻ khổng lồ tràn vào thị trường kết hợp cùng làn sóng nhà đầu tư F0 mở tài khoản kỷ lục, tạo nên chu kỳ tăng giá mạnh mẽ nhất lịch sử VN-Index lên mốc 1.500+ điểm.",
+            signals: [
+                {
+                    icon: "fa-arrow-trend-up",
+                    class: "up",
+                    title: "Bứt phá lên trên đường SMA 200 ngày",
+                    desc: "Sau thời gian dài nằm dưới đường xu hướng, giá VN-Index bứt phá mạnh mẽ vượt lên trên đường SMA 200 ngày, đồng thời đường này bắt đầu bẻ ngang và dốc ngược đi lên, báo hiệu chu kỳ Downtrend trước đó đã chấm dứt hoàn toàn."
+                },
+                {
+                    icon: "fa-bolt",
+                    class: "up",
+                    title: "Điểm giao cắt vàng (Golden Cross)",
+                    desc: "Đường SMA 50 ngày cắt mạnh lên trên đường SMA 200 ngày. Đây là tín hiệu xác nhận xu hướng tăng trung và dài hạn chính thức thiết lập, kích hoạt dòng tiền lớn của các tổ chức gom hàng quyết liệt."
+                },
+                {
+                    icon: "fa-circle-plus",
+                    class: "up",
+                    title: "Tạo đáy và đỉnh sau cao hơn (Higher High & Higher Low)",
+                    desc: "Cấu trúc giá tăng bền vững theo lý thuyết Dow. Mỗi nhịp điều chỉnh kỹ thuật đều tạo đáy sau cao hơn đáy trước và bứt phá tạo đỉnh sau cao hơn đỉnh trước, bám sát các đường EMA ngắn hạn (EMA 10, EMA 20)."
+                },
+                {
+                    icon: "fa-chart-line",
+                    class: "up",
+                    title: "Khối lượng giao dịch tăng trưởng đồng thuận",
+                    desc: "Thanh khoản thị trường liên tục gia tăng tỷ lệ thuận với đà tăng giá. Dòng tiền mới liên tục đổ vào hấp thụ toàn bộ lực bán chốt lời, đẩy giá trị giao dịch mỗi phiên từ 4.000 tỷ lên 30.000+ tỷ VNĐ."
+                }
+            ],
+            takeaways: [
+                "Trong chu kỳ Uptrend dài hạn, chiến lược tối ưu nhất là 'Gồng lãi' (Buy and Hold) cổ phiếu dẫn đầu thay vì lướt sóng ngắn hạn để tránh mất vị thế tốt.",
+                "Sử dụng các đường trung bình động ngắn hạn (như EMA 20) làm hỗ trợ động. Chỉ bán khi xu hướng ngắn hạn này bị gãy với khối lượng lớn.",
+                "Đi tiền lớn ngay từ giai đoạn đầu chu kỳ (tại các vùng Golden Cross hoặc khi giá tích lũy đi ngang bứt phá nền)."
+            ],
+            svg: `
+            <svg viewBox="0 0 600 220" class="lesson-schema-svg">
+                <!-- Grid Lines -->
+                <line x1="0" y1="40" x2="600" y2="40" class="schema-grid-line" />
+                <line x1="0" y1="90" x2="600" y2="90" class="schema-grid-line" />
+                <line x1="0" y1="140" x2="600" y2="140" class="schema-grid-line" />
+                <line x1="0" y1="190" x2="600" y2="190" class="schema-grid-line" />
+                
+                <!-- SMA 200 Line (Dốc lên) -->
+                <path d="M 50,170 Q 200,165 300,120 T 550,60" class="schema-indicator-line" stroke="#a855f7" />
+                <text x="50" y="182" fill="#a855f7" font-size="9">SMA(200) Dốc lên</text>
+                
+                <!-- SMA 50 Line (Cắt lên SMA 200) -->
+                <path d="M 50,185 Q 200,170 300,100 T 550,45" class="schema-indicator-line" stroke="#3b82f6" />
+                <text x="50" y="198" fill="#3b82f6" font-size="9">SMA(50)</text>
+                
+                <!-- Price Line (Đường giá dốc lên) -->
+                <path d="M 50,195 L 90,170 L 130,180 L 180,140 L 220,155 L 290,110 L 330,125 L 400,85 L 450,95 L 550,35" class="schema-price-line" stroke="#10b981" />
+                
+                <!-- Highlight Points -->
+                <!-- Covid Bottom -->
+                <circle cx="50" cy="195" r="5" class="schema-point" fill="#10b981" />
+                <rect x="25" y="202" width="70" height="15" rx="3" class="schema-label-rect" stroke="#10b981" />
+                <text x="60" y="212" fill="#10b981" class="schema-label-text" text-anchor="middle">Đáy Covid 650đ</text>
+                
+                <!-- Golden Cross Point -->
+                <circle cx="300" cy="115" r="5" class="schema-point" fill="#fbbf24" />
+                <rect x="250" y="75" width="100" height="18" rx="3" class="schema-label-rect" stroke="#fbbf24" />
+                <text x="300" y="87" fill="#fbbf24" class="schema-label-text" text-anchor="middle">Golden Cross (Uptrend)</text>
+                
+                <!-- Higher Low -->
+                <circle cx="450" cy="95" r="4" class="schema-point" fill="#34d399" />
+                <text x="460" y="110" fill="#34d399" font-size="9">Đáy sau cao hơn</text>
+            </svg>
+            `
+        },
+        {
+            id: "accumulation-2023",
+            tag: "Tích lũy",
+            tagClass: "accumulation",
+            title: "Giai Đoạn Tích Lũy 2023: Nhận diện Gom hàng & Cạn cung",
+            period: "Tháng 12/2022 - Tháng 05/2023",
+            context: "Sau khi chu kỳ Downtrend khốc liệt kết thúc vào tháng 11/2022, VN-Index bước vào giai đoạn tích lũy tạo đáy lớn (giai đoạn 1 theo lý thuyết Wyckoff) kéo dài gần 6 tháng. Thị trường liên tục đi ngang trong biên độ hẹp quanh 1.000 - 1.100 điểm với sự thờ ơ của nhỏ lẻ và thanh khoản sụt giảm mạnh trước khi bắt đầu con sóng tăng năm 2023.",
+            signals: [
+                {
+                    icon: "fa-compress",
+                    class: "warn",
+                    title: "Bollinger Bands co bóp siêu chặt (Bollinger Squeeze)",
+                    desc: "Độ rộng dải Bollinger Bands thu hẹp lại mức thấp nhất lịch sử, thể hiện biên độ biến động giá đã bị nén cực độ. Quy luật hộp nén chỉ ra rằng sau một giai đoạn nén chặt sẽ là một nhịp bùng nổ xu hướng rất mạnh."
+                },
+                {
+                    icon: "fa-droplet-slash",
+                    class: "warn",
+                    title: "Thanh khoản kiệt quệ (Cạn cung)",
+                    desc: "Khối lượng giao dịch sụt giảm sâu, nhiều phiên khớp lệnh cực kỳ thấp (chỉ bằng 40%-50% trung bình). Điều này chứng tỏ áp lực bán tháo của nhỏ lẻ đã cạn và lực cầu đẩy giá cũng chưa quyết liệt, tạo điều kiện cho tổ chức thu mua cổ phiếu giá rẻ."
+                },
+                {
+                    icon: "fa-border-none",
+                    class: "warn",
+                    title: "Giá đi ngang trong hộp (Hộp Darvas Box)",
+                    desc: "Cổ phiếu liên tục dao động lên xuống chạm biên trên (kháng cự) bị dội lại và chạm biên dưới (hỗ trợ) bật lên. Cấu trúc đi ngang này lặp lại nhiều lần nhằm loại bỏ các nhà đầu tư thiếu kiên nhẫn."
+                },
+                {
+                    icon: "fa-arrow-up-from-bracket",
+                    class: "up",
+                    title: "Phiên bùng nổ bứt phá (Breakout)",
+                    desc: "Kết thúc giai đoạn đi ngang là một phiên tăng điểm mạnh mẽ, vượt qua biên trên của hộp kháng cự với khối lượng giao dịch đột biến (gấp 1,5 - 2 lần trung bình). Đây là tín hiệu xác nhận dòng tiền lớn đánh bứt phá thoát nền tích lũy."
+                }
+            ],
+            takeaways: [
+                "Không nên mua đuổi (FOMO) khi giá chạm kháng cự trên của hộp tích lũy, hãy ưu tiên gom hàng tại các vùng hỗ trợ biên dưới.",
+                "Thanh khoản cạn kiệt ở vùng tích lũy là tín hiệu TỐT, thể hiện nguồn cung trôi nổi đã bị thu hẹp đáng kể.",
+                "Kiên nhẫn chờ đợi phiên Breakout xác nhận để gia tăng tỷ trọng tiền lớn bước vào chu kỳ tăng mới."
+            ],
+            svg: `
+            <svg viewBox="0 0 600 220" class="lesson-schema-svg">
+                <!-- Grid Lines -->
+                <line x1="0" y1="40" x2="600" y2="40" class="schema-grid-line" />
+                <line x1="0" y1="90" x2="600" y2="90" class="schema-grid-line" />
+                <line x1="0" y1="140" x2="600" y2="140" class="schema-grid-line" />
+                <line x1="0" y1="190" x2="600" y2="190" class="schema-grid-line" />
+                
+                <!-- Bollinger Upper (Net dut) -->
+                <path d="M 50,80 Q 200,90 350,90 T 550,50" class="schema-indicator-line" stroke="rgba(255,255,255,0.2)" stroke-dasharray="3" />
+                <text x="50" y="72" fill="rgba(255,255,255,0.4)" font-size="8">Bollinger Upper</text>
+                
+                <!-- Bollinger Lower (Net dut) -->
+                <path d="M 50,160 Q 200,150 350,150 T 550,190" class="schema-indicator-line" stroke="rgba(255,255,255,0.2)" stroke-dasharray="3" />
+                <text x="50" y="172" fill="rgba(255,255,255,0.4)" font-size="8">Bollinger Lower</text>
+                
+                <!-- Hộp Darvas Box -->
+                <rect x="150" y="95" width="280" height="50" fill="rgba(245,158,11,0.03)" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4" />
+                <text x="290" y="90" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">Hộp Tích Lũy (Darvas Box)</text>
+                
+                <!-- Price Line (Dao dong di ngang roi breakout) -->
+                <path d="M 50,150 L 90,105 L 140,135 L 180,100 L 220,140 L 260,105 L 300,138 L 340,110 L 390,140 L 430,95 L 480,70 L 550,60" class="schema-price-line" stroke="#fbbf24" />
+                
+                <!-- Highlight Points -->
+                <!-- Bollinger Squeeze Area -->
+                <rect x="330" y="146" width="30" height="2" fill="#ef4444" />
+                <text x="290" y="162" fill="rgba(255,255,255,0.5)" font-size="9">Nút thắt cổ chai (Squeeze)</text>
+                
+                <!-- Breakout Point -->
+                <circle cx="430" cy="95" r="5" class="schema-point" fill="#10b981" />
+                <rect x="440" y="105" width="80" height="18" rx="3" class="schema-label-rect" stroke="#10b981" />
+                <text x="485" y="117" fill="#10b981" class="schema-label-text" text-anchor="middle">Breakout thoát nền</text>
+            </svg>
+            `
+        },
+        {
+            id: "distribution",
+            tag: "Phân phối",
+            tagClass: "distribution",
+            title: "Giai Đoạn Phân Phối Đỉnh: Dấu hiệu Cá mập rút chân dòng tiền",
+            period: "Thời điểm vùng đỉnh chu kỳ",
+            context: "Sau một chu kỳ tăng giá mạnh kéo dài, dòng tiền lớn (Cá mập) cần hiện thực hóa lợi nhuận bằng cách bán dần cổ phiếu cho đám đông. Giai đoạn này diễn ra âm thầm, kéo dài vài tuần đến vài tháng. Giá cổ phiếu thường dao động rất lỏng lẻo ở vùng cao đi kèm thanh khoản khổng lồ và ngập tràn tin tức vĩ mô tích cực trước khi rơi tự do.",
+            signals: [
+                {
+                    icon: "fa-triangle-exclamation",
+                    class: "warn",
+                    title: "Xuất hiện nhiều 'Phiên phân phối' (Distribution Day)",
+                    desc: "Phiên phân phối là phiên giảm điểm >0,2% với khối lượng giao dịch cao hơn phiên trước đó. Nếu xuất hiện liên tục từ 4 đến 5 phiên phân phối như vậy trong vòng 2 đến 4 tuần, đó là tín hiệu dòng tiền thông minh đang quyết liệt thoát hàng."
+                },
+                {
+                    icon: "fa-arrow-up-long",
+                    class: "down",
+                    title: "Nến rút chân trên dài (Mẫu hình Upthrust / Bull Trap)",
+                    desc: "Trong phiên, giá kéo tăng mạnh tạo cảm giác bứt phá đỉnh cũ khiến nhà đầu tư hưng phấn mua đuổi. Tuy nhiên, cuối phiên áp lực bán tháo lớn đẩy giá đóng cửa về mức thấp nhất ngày, tạo cây nến có râu trên rất dài (nến búa ngược). Đây là cái bẫy dụ cầu của cá mập."
+                },
+                {
+                    icon: "fa-wave-square",
+                    class: "warn",
+                    title: "Biến động lỏng lẻo biên độ lớn (High Volatility)",
+                    desc: "Giá biến động trồi sụt mạnh, tăng trần hôm trước và giảm sàn hôm sau không rõ nguyên nhân. Sự lỏng lẻo này chứng tỏ lượng cổ phiếu đã rơi vào tay nhỏ lẻ nhiều và dòng tiền lớn không còn kiểm soát hay đỡ giá nữa."
+                },
+                {
+                    icon: "fa-bullhorn",
+                    class: "warn",
+                    title: "Tin tốt vĩ mô và doanh nghiệp ra dồn dập",
+                    desc: "Các tin tức về lợi nhuận đột biến, dự án lớn hay khuyến nghị mua giá mục tiêu cực cao được các công ty chứng khoán công bố liên tục. Tin tốt chính là 'màn sương mù' che đậy hành động phân phối của tổ chức."
+                }
+            ],
+            takeaways: [
+                "Bán hạ tỷ trọng danh mục và hạ tỷ lệ vay Margin ngay khi đếm thấy 4-5 phiên phân phối xuất hiện gần nhau.",
+                "Tránh xa các cổ phiếu dao động lỏng lẻo ở vùng đỉnh lịch sử và RSI tuần đạt mức quá mua cực hạn (>80).",
+                "Mua khi tin xấu cùng cực ở vùng tích lũy đáy, bán khi tin tốt ngập tràn ở vùng đỉnh định giá đắt đỏ."
+            ],
+            svg: `
+            <svg viewBox="0 0 600 220" class="lesson-schema-svg">
+                <!-- Grid Lines -->
+                <line x1="0" y1="40" x2="600" y2="40" class="schema-grid-line" />
+                <line x1="0" y1="90" x2="600" y2="90" class="schema-grid-line" />
+                <line x1="0" y1="140" x2="600" y2="140" class="schema-grid-line" />
+                <line x1="0" y1="190" x2="600" y2="190" class="schema-grid-line" />
+                
+                <!-- Support Line -->
+                <line x1="150" y1="110" x2="450" y2="110" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3" />
+                <text x="460" y="114" fill="#ef4444" font-size="9">Đường hỗ trợ (Nền phân phối)</text>
+                
+                <!-- Price Line (Dao dong tao 3 dinh roi break down) -->
+                <path d="M 50,180 L 100,120 L 160,70 L 200,110 L 250,55 L 290,110 L 340,58 L 380,110 L 415,65 L 450,110 L 480,145 L 550,195" class="schema-price-line" stroke="#a855f7" />
+                
+                <!-- Highlight Points -->
+                <!-- Peak 1 (Bull Trap / Upthrust) -->
+                <circle cx="250" cy="55" r="5" class="schema-point" fill="#ef4444" />
+                <rect x="210" y="20" width="80" height="18" rx="3" class="schema-label-rect" stroke="#ef4444" />
+                <text x="250" y="32" fill="#ef4444" class="schema-label-text" text-anchor="middle">Upthrust (Bẫy tăng)</text>
+                
+                <!-- Peak 2 (Distribution) -->
+                <circle cx="340" cy="58" r="5" class="schema-point" fill="#a855f7" />
+                <text x="350" y="52" fill="#a855f7" font-size="8">Phân phối vùng đỉnh</text>
+                
+                <!-- Breakdown Point -->
+                <circle cx="450" cy="110" r="5" class="schema-point" fill="#ef4444" />
+                <rect x="440" y="125" width="90" height="18" rx="3" class="schema-label-rect" stroke="#ef4444" />
+                <text x="485" y="137" fill="#ef4444" class="schema-label-text" text-anchor="middle">Breakdown (Gãy hỗ trợ)</text>
+            </svg>
+            `
+        }
+    ];
+
+    function renderLessonsList() {
+        const lessonsList = document.getElementById("lessons-list");
+        if (!lessonsList) return;
+        
+        let htmlStr = "";
+        historicalLessons.forEach(lesson => {
+            htmlStr += `
+            <button class="lesson-item-btn" data-id="${lesson.id}">
+                <span class="lesson-tag ${lesson.tagClass}">${lesson.tag}</span>
+                <span class="lesson-title">${lesson.title}</span>
+                <span class="lesson-period"><i class="fa-solid fa-calendar-days"></i> ${lesson.period}</span>
+            </button>
+            `;
+        });
+        lessonsList.innerHTML = htmlStr;
+        
+        // Gắn sự kiện click cho các nút bài học
+        const lessonBtns = lessonsList.querySelectorAll(".lesson-item-btn");
+        lessonBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                lessonBtns.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                
+                const lessonId = btn.getAttribute("data-id");
+                showLessonDetail(lessonId);
+            });
+        });
+    }
+
+    function showLessonDetail(lessonId) {
+        const lesson = historicalLessons.find(l => l.id === lessonId);
+        const detailContainer = document.getElementById("lesson-detail");
+        if (!lesson || !detailContainer) return;
+        
+        // Tạo HTML cho phần chi tiết bài học
+        let signalsHtml = "";
+        lesson.signals.forEach(sig => {
+            const statusClass = sig.class; // up, down, warn
+            signalsHtml += `
+            <div class="core-signal-item">
+                <div class="sig-header ${statusClass}">
+                    <i class="fa-solid ${sig.icon}"></i> ${sig.title}
+                </div>
+                <div class="sig-desc">${sig.desc}</div>
+            </div>
+            `;
+        });
+        
+        let takeawaysHtml = "";
+        lesson.takeaways.forEach(item => {
+            takeawaysHtml += `<li>${item}</li>`;
+        });
+        
+        detailContainer.innerHTML = `
+            <div class="lesson-detail-header">
+                <div class="title-area">
+                    <h2>${lesson.title}</h2>
+                    <span><i class="fa-solid fa-calendar-days"></i> Chu kỳ: ${lesson.period}</span>
+                </div>
+            </div>
+            <div class="lesson-detail-body">
+                <!-- Bối cảnh bài học -->
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; border-left: 3px solid #3b82f6; padding-left: 15px;">
+                    <strong>Bối cảnh lịch sử:</strong> ${lesson.context}
+                </div>
+                
+                <!-- Đồ họa trực quan (SVG) -->
+                <div>
+                    <div class="signals-sub-title"><i class="fa-solid fa-diagram-project"></i> Sơ đồ kỹ thuật mô phỏng chu kỳ</div>
+                    <div class="lesson-schema-container">
+                        ${lesson.svg}
+                    </div>
+                </div>
+                
+                <!-- Các dấu hiệu nhận biết -->
+                <div>
+                    <div class="signals-sub-title"><i class="fa-solid fa-triangle-exclamation"></i> Các dấu hiệu nhận biết xu hướng dài hạn</div>
+                    <div class="core-signals-grid">
+                        ${signalsHtml}
+                    </div>
+                </div>
+                
+                <!-- Bài học thực chiến -->
+                <div class="takeaway-card">
+                    <div class="takeaway-title"><i class="fa-solid fa-lightbulb"></i> Bài học thực chiến đúc kết</div>
+                    <ul class="takeaway-list">
+                        ${takeawaysHtml}
+                    </ul>
+                </div>
+            </div>
+        `;
+    }
+
+    // Lắng nghe click vào nút Bài học lịch sử trên Sidebar để render danh sách lần đầu tiên
+    if (btnLessons) {
+        btnLessons.addEventListener("click", () => {
+            renderLessonsList();
+            
+            // Chọn bài học đầu tiên làm mặc định nếu chưa chọn cái nào
+            const activeBtn = document.querySelector("#lessons-list .lesson-item-btn.active");
+            if (!activeBtn) {
+                const firstBtn = document.querySelector("#lessons-list .lesson-item-btn");
+                if (firstBtn) {
+                    firstBtn.classList.add("active");
+                    const firstId = firstBtn.getAttribute("data-id");
+                    showLessonDetail(firstId);
+                }
+            }
         });
     }
 

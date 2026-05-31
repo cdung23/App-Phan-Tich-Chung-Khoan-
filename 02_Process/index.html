@@ -54,6 +54,9 @@
                 <a href="#" class="nav-item" id="btn-screener">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Bộ lọc rà soát
                 </a>
+                <a href="#" class="nav-item" id="btn-lessons">
+                    <i class="fa-solid fa-book-open"></i> Bài học lịch sử
+                </a>
             </nav>
             
             <div class="file-uploader-section">
@@ -567,6 +570,29 @@
                                 </tr>
                             </tbody>
                         </table>
+            </div>
+
+            <!-- Alternate View: Historical Lessons -->
+            <div class="dashboard-grid hidden" id="lessons-view">
+                <div class="lessons-container" style="display: grid; grid-template-columns: 320px 1fr; gap: 20px; width: 100%; min-height: 600px;">
+                    <!-- Cột bên trái: Danh sách bài học -->
+                    <div class="lessons-sidebar-card card" style="display: flex; flex-direction: column; gap: 15px; height: 100%; max-height: 680px; overflow-y: auto;">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fa-solid fa-graduation-cap"></i> Chủ đề dài hạn</h2>
+                        </div>
+                        <div class="card-body" id="lessons-list" style="display: flex; flex-direction: column; gap: 12px; padding: 15px;">
+                            <!-- Danh sách bài học được render động bằng JS -->
+                        </div>
+                    </div>
+                    
+                    <!-- Cột bên phải: Nội dung chi tiết bài học -->
+                    <div class="lesson-detail-card card" id="lesson-detail" style="height: 100%; min-height: 550px; display: flex; flex-direction: column;">
+                        <!-- Nội dung chi tiết bài học được render động bằng JS -->
+                        <div class="card-body text-center text-muted" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 60px 20px;">
+                            <i class="fa-solid fa-book-open" style="font-size: 48px; margin-bottom: 20px; color: var(--text-muted);"></i>
+                            <h3>Chọn một bài học từ danh mục bên trái</h3>
+                            <p style="margin-top: 10px;">Học hỏi các mô hình xu hướng dài hạn kinh điển từ lịch sử giá chứng khoán để rèn luyện tư duy thực chiến.</p>
+                        </div>
                     </div>
                 </div>
             </div>
