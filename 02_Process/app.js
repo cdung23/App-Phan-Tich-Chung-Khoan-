@@ -156,6 +156,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const pageTitle = document.getElementById("page-title");
             if (pageTitle) pageTitle.textContent = `Trực quan hóa & Phân tích Kỹ thuật - Mã ${currentTicker}`;
             
+            // Ẩn/hiện main-header (chỉ hiện ở Dashboard)
+            const mainHeader = document.querySelector(".main-header");
+            if (mainHeader) {
+                if (v.el === dashboardView) {
+                    mainHeader.classList.remove("hidden");
+                } else {
+                    mainHeader.classList.add("hidden");
+                }
+            }
+            
             // Resize chart if showing dashboard (Lightweight Charts requirement)
             if (v.el === dashboardView && chartInstance) {
                 resizeChart();
@@ -4732,6 +4742,10 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Hiện vùng chứa FA
         if (faViewContainer) faViewContainer.classList.remove("hidden");
+        
+        // Ẩn main-header (chỉ hiện ở Dashboard)
+        const mainHeader = document.querySelector(".main-header");
+        if (mainHeader) mainHeader.classList.add("hidden");
         
         const pageTitle = document.getElementById("page-title");
         if (pageTitle) pageTitle.textContent = `Phân tích Doanh nghiệp & Định giá - Mã ${currentTicker}`;
